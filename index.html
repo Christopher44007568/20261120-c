@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071114" />
+    <title>ORIGIN SHIFT — 大坐标原点重定位实验场</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23071114'/%3E%3Cpath d='M16 4v24M4 16h24M9 9l14 14M23 9L9 23' stroke='%236ceae0' stroke-width='1.2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='none' stroke='%23ffbd6b'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span>
+          </div>
+          <div>
+            <div class="brand-name">ORIGIN SHIFT<span>/LAB</span></div>
+            <div class="brand-sub">LARGE-WORLD PRECISION RANGE</div>
+          </div>
+        </div>
+
+        <div class="system-state">
+          <span class="live-dot"></span>
+          <span class="system-state-label">TELEMETRY LIVE</span>
+          <span class="system-state-divider"></span>
+          <span class="mono" id="clock">00:00:00.000</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-button" id="help-button" type="button" aria-label="打开实验说明">
+            <span class="help-glyph">?</span>
+            <span>实验说明</span>
+          </button>
+          <button class="icon-button square" id="fullscreen-button" type="button" aria-label="全屏">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M7 3H3v4M13 3h4v4M7 17H3v-4M13 17h4v-4" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="stage-card">
+          <div class="stage-toolbar">
+            <div class="stage-title">
+              <span class="eyebrow">SCENE 04</span>
+              <h1>百万米级机库场 · 原点重定位</h1>
+            </div>
+            <div class="transport">
+              <button class="play-button" id="play-button" type="button" aria-label="暂停回放">
+                <svg class="pause-icon" viewBox="0 0 12 12" aria-hidden="true">
+                  <path d="M3 2h2v8H3zM7 2h2v8H7z" />
+                </svg>
+                <svg class="play-icon" viewBox="0 0 12 12" aria-hidden="true">
+                  <path d="M3 2l7 4-7 4z" />
+                </svg>
+              </button>
+              <div class="route-readout">
+                <div class="route-line">
+                  <span id="route-state">AUTO REPLAY / 03 LAPS</span>
+                  <span class="mono" id="lap-count">01 / 03</span>
+                </div>
+                <div class="progress-track"><span id="route-progress"></span></div>
+              </div>
+              <label class="speed-control" for="speed-range">
+                <span>120 m/s</span>
+                <input id="speed-range" type="range" min="40" max="200" step="10" value="120" />
+              </label>
+              <button class="text-button" id="restart-button" type="button">重新回放</button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage">
+            <canvas id="gl-canvas" aria-label="三种精度路径的机库场对照视图"></canvas>
+            <div class="view-grid" aria-hidden="true">
+              <article class="view-caption raw-caption">
+                <div class="view-index">01</div>
+                <div class="view-copy">
+                  <div class="view-name">原始单精度</div>
+                  <div class="view-tech">RAW FP32 / NO REBASE</div>
+                </div>
+                <div class="view-live">
+                  <span>JITTER</span>
+                  <strong id="raw-jitter-caption">0.00 px</strong>
+                </div>
+              </article>
+              <article class="view-caption relative-caption">
+                <div class="view-index">02</div>
+                <div class="view-copy">
+                  <div class="view-name">相机相对</div>
+                  <div class="view-tech">PARTITION ORIGIN + RELATIVE</div>
+                </div>
+                <div class="view-live good">
+                  <span>JITTER</span>
+                  <strong id="relative-jitter-caption">0.00 px</strong>
+                </div>
+              </article>
+              <article class="view-caption reference-caption">
+                <div class="view-index">03</div>
+                <div class="view-copy">
+                  <div class="view-name">双精度参考</div>
+                  <div class="view-tech">CPU FP64 / GROUND TRUTH</div>
+                </div>
+                <div class="view-live reference">
+                  <span>DELTA</span>
+                  <strong>0.000 px</strong>
+                </div>
+              </article>
+            </div>
+
+            <div class="hud-top-left">
+              <span class="hud-kicker">CAMERA</span>
+              <span class="mono" id="camera-coord">X 1,100,288.0 / Z 2,300,416.0</span>
+            </div>
+            <div class="hud-top-right">
+              <span class="hud-kicker">RENDER ORIGIN</span>
+              <span class="mono" id="origin-coord">X 1,100,288 / Z 2,300,416</span>
+            </div>
+
+            <div class="stage-footer">
+              <div class="route-legend">
+                <div class="legend-item"><i class="legend-line yellow"></i><span>滑行中线 · 18 cm</span></div>
+                <div class="legend-item"><i class="legend-line cyan"></i><span>512 m 分区边界</span></div>
+                <div class="legend-item"><i class="legend-box"></i><span>机库实例</span></div>
+              </div>
+              <div class="viewport-readout">
+                <span>FOV <b class="mono">48°</b></span>
+                <span>ALT <b class="mono" id="altitude-value">24.0 m</b></span>
+                <span>FPS <b class="mono" id="fps-value">60</b></span>
+              </div>
+            </div>
+
+            <div class="crosshair" id="crosshair" aria-hidden="true">
+              <span class="crosshair-x"></span>
+              <span class="crosshair-y"></span>
+              <span class="crosshair-tag">PICK</span>
+            </div>
+            <div class="drag-hint" id="drag-hint">拖拽视角 · 点击地面放置拾取探针</div>
+            <div class="relocation-flash" id="relocation-flash">
+              <span class="flash-mark"></span>
+              <div>
+                <b>ORIGIN REBASED</b>
+                <span id="flash-detail">+512 m / +0 m</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="crossing-strip">
+            <div class="strip-label">
+              <span class="eyebrow">CROSSING LOG</span>
+              <span>同一路线 · 连续过界</span>
+            </div>
+            <div class="crossing-track" id="crossing-track">
+              <div class="crossing-empty">等待首次分区过界…</div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="inspector">
+          <div class="inspector-head">
+            <div>
+              <span class="eyebrow">PRECISION AUDIT</span>
+              <h2>实时精度审计</h2>
+            </div>
+            <span class="audit-badge">FP64 GT</span>
+          </div>
+
+          <section class="metric-stack">
+            <article class="metric-card">
+              <div class="metric-title">
+                <span>细线像素抖动</span>
+                <span class="metric-status good" id="jitter-status">稳定</span>
+              </div>
+              <div class="metric-value"><strong id="relative-jitter-value">0.000</strong><span>px</span></div>
+              <div class="metric-scale">
+                <span class="metric-fill" id="jitter-fill"></span>
+                <i class="metric-limit"></i>
+              </div>
+              <div class="metric-compare">
+                <span>RAW FP32 <b class="mono" id="raw-jitter-value">0.000 px</b></span>
+                <span>FP64 <b class="mono">0.000 px</b></span>
+              </div>
+            </article>
+
+            <article class="metric-card">
+              <div class="metric-title">
+                <span>拾取坐标误差</span>
+                <span class="metric-status good" id="pick-status">亚毫米</span>
+              </div>
+              <div class="metric-value"><strong id="relative-pick-value">0.0000</strong><span>m</span></div>
+              <div class="mini-bars">
+                <div><span>RAW</span><i><b id="raw-pick-bar"></b></i><em class="mono" id="raw-pick-value">0.0000 m</em></div>
+                <div><span>REL</span><i><b id="relative-pick-bar"></b></i><em class="mono" id="relative-pick-value-inline">0.0000 m</em></div>
+                <div><span>FP64</span><i><b class="reference-bar"></b></i><em class="mono">0.0000 m</em></div>
+              </div>
+            </article>
+
+            <article class="metric-card">
+              <div class="metric-title">
+                <span>重定位帧画跳变</span>
+                <span class="metric-status good" id="jump-status">连续</span>
+              </div>
+              <div class="metric-value"><strong id="relative-jump-value">0.000</strong><span>px</span></div>
+              <div class="sparkline-wrap">
+                <canvas id="sparkline" width="540" height="86"></canvas>
+                <span class="sparkline-label">最近 8 次过界</span>
+              </div>
+              <div class="metric-compare">
+                <span>RAW FP32 <b class="mono" id="raw-jump-value">0.000 px</b></span>
+                <span>FP64 <b class="mono">0.000 px</b></span>
+              </div>
+            </article>
+          </section>
+
+          <section class="pick-panel">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">PICK PROBE</span>
+                <h3>世界坐标拾取</h3>
+              </div>
+              <span class="probe-id mono" id="probe-id">#0000</span>
+            </div>
+            <div class="coord-readout">
+              <div><span>WORLD X</span><b class="mono" id="pick-x">1,100,288.000</b></div>
+              <div><span>WORLD Z</span><b class="mono" id="pick-z">2,300,416.000</b></div>
+            </div>
+            <div class="probe-row">
+              <span>锚定机库</span>
+              <b id="pick-target">H-02 / NORTH BAY</b>
+            </div>
+            <div class="probe-row">
+              <span>探针→机库距离</span>
+              <b class="mono" id="pick-distance">0.000 m</b>
+            </div>
+            <div class="probe-row">
+              <span>累计连续漂移</span>
+              <b class="mono good-text" id="pick-drift">0.000 mm</b>
+            </div>
+            <button class="probe-button" id="probe-button" type="button">
+              <span class="probe-icon"></span>
+              在视图中取样
+            </button>
+          </section>
+
+          <section class="pipeline-panel">
+            <div class="section-heading compact">
+              <span class="eyebrow">UPLINK</span>
+              <span class="pipeline-rate mono" id="upload-rate">3 buffers · 0.84 MB</span>
+            </div>
+            <div class="pipeline-flow">
+              <div class="pipe-node cpu">
+                <span>CPU</span>
+                <b>FP64 WORLD</b>
+              </div>
+              <i class="pipe-arrow"></i>
+              <div class="pipe-node origin">
+                <span>− ORIGIN</span>
+                <b id="pipeline-origin">2148 / 4493</b>
+              </div>
+              <i class="pipe-arrow"></i>
+              <div class="pipe-node gpu">
+                <span>GPU</span>
+                <b>FP32 RELATIVE</b>
+              </div>
+            </div>
+            <div class="pipeline-facts">
+              <span>相机相对距 <b class="mono" id="camera-relative-distance">418.6 m</b></span>
+              <span>GPU 原点精度 <b class="mono">0.00003 m</b></span>
+            </div>
+          </section>
+
+          <div class="inspector-foot">
+            <span class="live-dot small"></span>
+            <span>双精度参考由 CPU 每帧重投影</span>
+            <span class="mono" id="frame-time">16.67 ms</span>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <dialog class="help-dialog" id="help-dialog">
+      <form method="dialog">
+        <span class="eyebrow">METHOD / CONTROLS</span>
+        <h2>实验说明</h2>
+        <p>相机与所有物体保存在 CPU 双精度世界中。分区原点每 512 m 更新一次，上传 GPU 前只保留“分区原点 + 相机相对”的小坐标。</p>
+        <div class="help-grid">
+          <div><b>拖拽</b><span>旋转观察方向</span></div>
+          <div><b>点击地面</b><span>放置世界坐标拾取探针</span></div>
+          <div><b>空格</b><span>暂停 / 继续自动回放</span></div>
+          <div><b>R</b><span>重放同一路线</span></div>
+        </div>
+        <button class="dialog-close" value="close">返回实验</button>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
