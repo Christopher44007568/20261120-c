@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08131c" />
+    <meta name="description" content="基于瑞利与米氏散射的实时天空、体积云与日照实验台" />
+    <title>ATMOS — 天空的颜色</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%230a1721' stroke='%2387cfe2'/%3E%3Ccircle cx='32' cy='32' r='8' fill='%23a9e2ef'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='8' fill='none' stroke='%2387cfe2' opacity='.6' transform='rotate(-28 32 32)'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <canvas id="sky-canvas" aria-label="实时大气散射天空"></canvas>
+    <div class="atmosphere-grain" aria-hidden="true"></div>
+    <div id="webgl-error" class="webgl-error" hidden>
+      <strong>WebGL 2 无法启动</strong>
+      <span>当前浏览器未提供硬件加速渲染。</span>
+    </div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="ATMOS 首页">
+          <span class="brand-mark"><i></i></span>
+          <span class="brand-name">ATMOS</span>
+          <span class="brand-divider"></span>
+          <span class="brand-subtitle">大气光学实验室</span>
+        </a>
+        <div class="coordinates">
+          <span>N 31°14'</span><span class="coord-slash">/</span><span>E 121°29'</span>
+          <span class="coord-rule"></span>
+          <span>单次散射 · 体积云</span>
+        </div>
+        <div class="live-badge"><i></i><span>RAYLEIGH / MIE · LIVE</span></div>
+      </header>
+
+      <main class="stage">
+        <section class="hero-copy" aria-labelledby="page-title">
+          <p class="eyebrow"><span></span>RAYLEIGH + MIE + VOLUME</p>
+          <h1 id="page-title">天空的颜色<br /><em>由散射决定</em></h1>
+          <p class="lede">
+            短波蓝光被空气分子优先散射，气溶胶在太阳周围形成暖色光晕。
+            调节太阳高度、散射强度与云层厚度，观察颜色、日照和云影如何连续变化。
+          </p>
+          <div class="mode-chips" aria-label="模型模式">
+            <span class="active">单次散射</span>
+            <span>体积阴影</span>
+            <span>实时物理</span>
+          </div>
+        </section>
+
+        <aside class="observation-panel" aria-label="实时观测数据">
+          <div class="panel-accent"></div>
+          <header class="panel-header">
+            <div>
+              <p class="micro-label">OBSERVATION / 01</p>
+              <h2>实时观测</h2>
+            </div>
+            <span class="model-chip">MODEL v3.2</span>
+          </header>
+
+          <section class="panel-section sun-section">
+            <div class="section-heading">
+              <div><span class="section-number">01</span><h3>太阳位置</h3></div>
+              <span class="section-hint">高于地平线</span>
+            </div>
+            <div class="sun-readout">
+              <div>
+                <span class="field-label">ELEVATION</span>
+                <strong><span id="panel-elevation">14.0</span><small>°</small></strong>
+              </div>
+              <div class="vector-block">
+                <span class="field-label">SUN VECTOR · AZ <span id="panel-azimuth">16</span>°</span>
+                <code id="sun-vector">0.267, 0.242, -0.933</code>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-heading">
+              <div><span class="section-number">02</span><h3>天空颜色</h3></div>
+              <span class="section-hint">sRGB / 8 bit</span>
+            </div>
+            <div class="color-list">
+              <div class="color-row">
+                <span class="swatch" id="sun-swatch"></span>
+                <span class="color-name">太阳<small>透射后色温</small></span>
+                <code id="sun-hex">#E5DDC0</code>
+                <span class="rgb" id="sun-rgb">229 221 192</span>
+              </div>
+              <div class="color-row">
+                <span class="swatch" id="zenith-swatch"></span>
+                <span class="color-name">天顶<small>散射光</small></span>
+                <code id="zenith-hex">#3E668E</code>
+                <span class="rgb" id="zenith-rgb">62 102 142</span>
+              </div>
+              <div class="color-row">
+                <span class="swatch" id="horizon-swatch"></span>
+                <span class="color-name">地平线<small>0.8° 仰角</small></span>
+                <code id="horizon-hex">#FEFCF5</code>
+                <span class="rgb" id="horizon-rgb">254 252 245</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-heading">
+              <div><span class="section-number">03</span><h3>散射系数 × 日照</h3></div>
+              <span class="section-hint">T <b id="transmission-readout">63.0%</b></span>
+            </div>
+            <label class="control">
+              <span class="control-label"><span>瑞利 β<sub>R</sub></span><b id="rayleigh-value">1.00×</b></span>
+              <input id="rayleigh-control" type="range" min="0.2" max="3" step="0.01" value="1" />
+            </label>
+            <label class="control">
+              <span class="control-label"><span>米氏 β<sub>M</sub></span><b id="mie-value">0.82×</b></span>
+              <input id="mie-control" type="range" min="0.2" max="2" step="0.01" value="0.82" />
+            </label>
+            <div class="metric-grid">
+              <div class="metric">
+                <span>直射透射率</span>
+                <strong><span id="metric-transmission">63.0</span><small>%</small></strong>
+              </div>
+              <div class="metric">
+                <span>地面照度</span>
+                <strong><span id="metric-illuminance">19.5</span><small>klx</small></strong>
+              </div>
+            </div>
+            <div class="chart-block">
+              <div class="chart-head">
+                <span>系数 — 日照响应</span>
+                <span>βR 0.2× → 3.0×</span>
+              </div>
+              <svg id="scatter-chart" viewBox="0 0 300 84" preserveAspectRatio="none" role="img"
+                aria-label="瑞利系数与直射、漫射天空辐射关系图">
+                <defs>
+                  <linearGradient id="chartFade" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0" stop-color="#6eb8d8" stop-opacity=".22"></stop>
+                    <stop offset="1" stop-color="#6eb8d8" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <path id="direct-area" class="chart-area"></path>
+                <path id="direct-path" class="chart-line direct"></path>
+                <path id="diffuse-path" class="chart-line diffuse"></path>
+                <line id="chart-marker" class="chart-marker" x1="0" x2="0" y1="8" y2="72"></line>
+                <circle id="chart-dot" class="chart-dot" cx="0" cy="0" r="2.6"></circle>
+              </svg>
+              <div class="chart-legend">
+                <span><i class="legend-line direct"></i>直射 I/I₀</span>
+                <span><i class="legend-line diffuse"></i>漫射天空</span>
+                <code>T = e<sup>−τ·m</sup></code>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-section cloud-section">
+            <div class="section-heading">
+              <div><span class="section-number">04</span><h3>云层体积</h3></div>
+              <label class="toggle">
+                <input id="cloud-shadow-toggle" type="checkbox" checked />
+                <span class="toggle-track"><i></i></span>
+                <span>云影</span>
+              </label>
+            </div>
+            <label class="control">
+              <span class="control-label"><span>云量</span><b id="coverage-value">58%</b></span>
+              <input id="coverage-control" type="range" min="0" max="1" step="0.01" value="0.58" />
+            </label>
+            <label class="control">
+              <span class="control-label"><span>厚度</span><b id="thickness-value">1.80 km</b></span>
+              <input id="thickness-control" type="range" min="0.2" max="3.2" step="0.05" value="1.8" />
+            </label>
+            <div class="cloud-stats">
+              <div><span>云底 / 云顶</span><b id="cloud-heights">1.05 / 2.85 km</b></div>
+              <div><span>光学厚度 τ</span><b id="cloud-optical-depth">3.37</b></div>
+            </div>
+            <div class="shadow-stat">
+              <span>云影遮蔽</span>
+              <strong><span id="shadow-percent">96.6</span>%</strong>
+              <div class="shadow-track"><i id="shadow-fill"></i></div>
+            </div>
+            <p class="panel-note">体积光线沿太阳方向继续采样，云底与海面读取连续透射率。</p>
+          </section>
+
+          <footer class="panel-footer">
+            <span>τR = βR · HR · m</span>
+            <span>8 km / 1.2 km scale height</span>
+          </footer>
+        </aside>
+
+        <section class="elevation-card glass-card" aria-label="太阳高度角控制">
+          <div class="card-heading">
+            <span>SOLAR ELEVATION</span>
+            <div class="preset-group" role="group" aria-label="太阳高度预设">
+              <button type="button" data-preset="-4">黎明</button>
+              <button type="button" data-preset="2">日落</button>
+              <button type="button" data-preset="14" class="active">黄金</button>
+              <button type="button" data-preset="62">正午</button>
+            </div>
+          </div>
+          <div class="elevation-main">
+            <strong><span id="elevation-readout">14.0</span><small>°</small></strong>
+            <div class="scale-track">
+              <input id="elevation-control" type="range" min="-6" max="90" step="0.25" value="14"
+                aria-label="太阳高度角" />
+              <div class="scale-ticks"><span>−6°</span><span>6°</span><span>30°</span><span>60°</span><span>90°</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="continuity-card glass-card" aria-label="天空颜色连续性">
+          <div class="card-heading">
+            <span>ELEVATION CONTINUITY / 05</span>
+            <span class="pass-badge">PASS</span>
+          </div>
+          <h2>天空颜色连续采样</h2>
+          <div id="continuity-strip" class="continuity-strip" role="img"
+            aria-label="从负六度到九十度的天空与地平线连续色带"></div>
+          <p class="continuity-note">
+            0.25° 步进 · 相邻最大 ΔRGB <b id="max-delta">0.130</b> · 无阶跃色带
+          </p>
+        </section>
+
+        <div class="rendering-status" aria-hidden="true">
+          <span class="status-dot"></span>
+          <span>WEBGL / 物理着色</span>
+          <i></i>
+          <span>ADAPTIVE EXPOSURE</span>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
