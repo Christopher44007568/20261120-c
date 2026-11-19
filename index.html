@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="矩形与圆盘面光源的 LTC 解析渲染、蒙特卡洛噪声对照和粗糙度连续性验收。">
+  <title>LTC 面光源连续性实验台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="eyebrow"><span class="dot"></span> LINEaRLY TRANSFORMED COSINES / AREA LIGHT VALIDATION</div>
+    <div class="hero-row">
+      <div>
+        <h1>面光源高光连续性实验台</h1>
+        <p class="lede">矩形与圆盘面光源的 LTC 解析积分、面积蒙特卡洛噪声对照，以及粗糙度渐变表面的跳变审计。</p>
+      </div>
+      <div class="hero-stamp">
+        <span>64 × 64</span>
+        <small>GGX-LTC FIT</small>
+      </div>
+    </div>
+    <div class="status-rail">
+      <div class="status-chip ok"><span class="status-icon">✓</span><span id="status-validation">输入合法</span></div>
+      <div class="status-chip"><span class="status-icon">◈</span><span id="status-mesh">0 boundary edges</span></div>
+      <div class="status-chip"><span class="status-icon">∿</span><span>双线性矩阵采样</span></div>
+      <div class="status-chip"><span class="status-icon">◎</span><span>统一能量单位 · 白高光归一</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="lab-grid">
+      <aside class="panel controls">
+        <div class="panel-heading">
+          <span class="index">00</span>
+          <div><h2>实验控制</h2><p>同步所有画布</p></div>
+        </div>
+
+        <div class="control-block">
+          <label for="roughness-range">固定粗糙度 <output id="roughness-value">0.12</output></label>
+          <input id="roughness-range" type="range" min="0.04" max="0.82" step="0.01" value="0.12">
+          <div class="range-labels"><span>镜面 0.04</span><span>漫反射 0.82</span></div>
+        </div>
+
+        <div class="control-block">
+          <label>蒙特卡洛样本数</label>
+          <div class="segmented" id="spp-group">
+            <button data-spp="4">4</button>
+            <button data-spp="12">12</button>
+            <button data-spp="32" class="active">32</button>
+            <button data-spp="128">128</button>
+          </div>
+          <p class="micro-note">分层面积采样；亮度误差随 spp 收敛，颗粒即有限样本噪声。</p>
+        </div>
+
+        <div class="control-block two-col">
+          <div>
+            <label for="seed-input">随机种子</label>
+            <input id="seed-input" type="number" value="7" min="1" max="999999">
+          </div>
+          <button id="btn-rerun" class="button button-accent">重算对照</button>
+        </div>
+
+        <div class="control-block">
+          <label>场景输入验收</label>
+          <button id="fixture-valid" class="fixture-button valid">合法输入 · 闭合盒体</button>
+          <button id="fixture-invalid" class="fixture-button invalid">非水密 · 缺失顶面</button>
+          <div id="input-report" class="input-report ok">
+            <strong>READY</strong>
+            <span>两个样例可直接载入，校验结果会替换状态条。</span>
+          </div>
+        </div>
+
+        <div class="control-block exports">
+          <label>可复现输出</label>
+          <button id="btn-export-report" class="button">导出 JSON 报告</button>
+          <button id="btn-export-csv" class="button">导出矩阵 CSV</button>
+          <p class="micro-note">浏览器下载与 <code>npm run validate</code> 生成同源数据。</p>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <div class="section-heading">
+          <div><span class="index">01</span><h2>解析解 / 面积采样</h2></div>
+          <div class="section-meta">同一 LTC 矩阵 · 同一曝光 · 固定粗糙度 <span id="fixed-r-label">0.12</span></div>
+        </div>
+
+        <div class="render-grid">
+          <article class="render-card">
+            <div class="card-top">
+              <div><span class="type-tag">RECT</span><h3>矩形面光源</h3></div>
+              <span class="method-badge analytic">LTC 解析</span>
+            </div>
+            <canvas id="canvas-rect-ltc" class="render-canvas" width="280" height="172"></canvas>
+            <div class="card-foot"><span>多边形线积分</span><span>0 spp 噪声</span></div>
+          </article>
+          <article class="render-card">
+            <div class="card-top">
+              <div><span class="type-tag">RECT</span><h3>矩形面光源</h3></div>
+              <span class="method-badge sample">MC <b id="rect-spp-label">12</b> spp</span>
+            </div>
+            <canvas id="canvas-rect-mc" class="render-canvas" width="280" height="172"></canvas>
+            <div class="card-foot"><span>分层面积采样</span><span>σ <b id="metric-rect-noise">—</b></span></div>
+          </article>
+          <article class="render-card">
+            <div class="card-top">
+              <div><span class="type-tag">DISK</span><h3>圆盘面光源</h3></div>
+              <span class="method-badge analytic">LTC 解析</span>
+            </div>
+            <canvas id="canvas-disk-ltc" class="render-canvas" width="280" height="172"></canvas>
+            <div class="card-foot"><span>128 边多边形 · 0.04% 面积误差</span><span>0 spp 噪声</span></div>
+          </article>
+          <article class="render-card">
+            <div class="card-top">
+              <div><span class="type-tag">DISK</span><h3>圆盘面光源</h3></div>
+              <span class="method-badge sample">MC <b id="disk-spp-label">12</b> spp</span>
+            </div>
+            <canvas id="canvas-disk-mc" class="render-canvas" width="280" height="172"></canvas>
+            <div class="card-foot"><span>同心圆分层采样</span><span>σ <b id="metric-disk-noise">—</b></span></div>
+          </article>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric"><span>RECT · 高光 IoU</span><b id="metric-rect-iou">—</b></div>
+          <div class="metric"><span>RECT · 相对亮度偏差</span><b id="metric-rect-l1">—</b></div>
+          <div class="metric"><span>DISK · 高光 IoU</span><b id="metric-disk-iou">—</b></div>
+          <div class="metric"><span>DISK · 相对亮度偏差</span><b id="metric-disk-l1">—</b></div>
+          <div class="metric wide"><span>解析 / 采样峰值比</span><b id="metric-peak-ratio">—</b></div>
+        </div>
+
+        <article class="gradient-card">
+          <div class="card-top wide-top">
+            <div>
+              <span class="type-tag warm">ROUGHNESS GRADIENT</span>
+              <h3>粗糙度渐变表面：连续采样 vs 面积采样</h3>
+            </div>
+            <span class="continuity-pill ok" id="gradient-pill">边界零跳变</span>
+          </div>
+          <div class="gradient-pair">
+            <div>
+              <div class="sub-label"><span>解析解 · 双线性</span><span>α = 0.045 → 0.82</span></div>
+              <canvas id="canvas-gradient-ltc" class="strip-canvas" width="620" height="168"></canvas>
+            </div>
+            <div>
+              <div class="sub-label"><span>蒙特卡洛 · 面积采样</span><span><b id="gradient-spp-label">12</b> spp</span></div>
+              <canvas id="canvas-gradient-mc" class="strip-canvas" width="620" height="168"></canvas>
+            </div>
+          </div>
+          <div class="gradient-footer">
+            <span>边界位置</span>
+            <span class="boundary-markers"><i>α 0.14</i><i>α 0.32</i><i>α 0.58</i></span>
+            <span>连续最大跳变 <b id="gradient-jump">—</b></span>
+            <span>量化对照 <b id="gradient-quantized">—</b></span>
+          </div>
+        </article>
+      </section>
+    </section>
+
+    <section class="analysis-grid">
+      <article class="panel chart-card matrix-card">
+        <div class="panel-heading">
+          <span class="index">02</span>
+          <div><h2>LTC 矩阵随粗糙度连续变化</h2><p>固定 N·V = 0.7 · 257 个采样点</p></div>
+          <span class="chart-badge" id="matrix-max-step">max Δ —</span>
+        </div>
+        <canvas id="chart-matrix" class="chart" width="640" height="236"></canvas>
+        <div class="matrix-lower">
+          <div class="matrix-table-wrap">
+            <table class="matrix-table" id="matrix-table">
+              <thead><tr><th>α</th><th>M⁻¹ (3 × 3)</th><th>det</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="boundary-mini">
+            <p>渐变断点处的解析亮度跳变</p>
+            <canvas id="chart-boundary" class="mini-chart" width="300" height="150"></canvas>
+            <p class="micro-note">青：双线性解析；红：最近邻量化对照。横轴为对数尺度。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel chart-card directions-card">
+        <div class="panel-heading">
+          <span class="index">03</span>
+          <div><h2>LTC 采样方向分布</h2><p>切平面投影 · 每档 512 个方向</p></div>
+        </div>
+        <canvas id="chart-directions" class="chart directions-chart" width="440" height="300"></canvas>
+        <div class="direction-note">
+          <span>中心 = 法线 N</span>
+          <span>外圈 = 切线 / 地平线</span>
+          <span>颜色深度 ∝ cosθ</span>
+        </div>
+      </article>
+
+      <article class="panel chart-card error-card">
+        <div class="panel-heading">
+          <span class="index">04</span>
+          <div><h2>解析解与采样解亮度误差</h2><p>探针位于镜面峰 · 每档 8 个随机种子</p></div>
+        </div>
+        <canvas id="chart-error" class="chart" width="520" height="250"></canvas>
+        <div class="error-summary">
+          <div><span>矩形解析值</span><b id="error-rect-analytic">—</b></div>
+          <div><span>矩形 1024 spp</span><b id="error-rect-sampled">—</b></div>
+          <div><span>圆盘解析值</span><b id="error-disk-analytic">—</b></div>
+          <div><span>圆盘 1024 spp</span><b id="error-disk-sampled">—</b></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="validation-section">
+      <div class="section-heading">
+        <div><span class="index">05</span><h2>输入合法性 / 非水密网格对照</h2></div>
+        <div class="section-meta" id="validation-summary">等待载入样例</div>
+      </div>
+      <div class="validation-grid">
+        <article class="validation-card valid-card" id="card-valid">
+          <div class="validation-head">
+            <div><span class="fixture-tag">FIXTURE A</span><h3>合法输入</h3></div>
+            <span class="validation-badge" id="valid-badge">PASS</span>
+          </div>
+          <canvas id="canvas-valid-mesh" class="mesh-canvas" width="300" height="186"></canvas>
+          <div class="mesh-stats" id="valid-mesh-stats">
+            <span>v <b>—</b></span><span>f <b>—</b></span><span>e <b>—</b></span><span>χ <b>—</b></span>
+          </div>
+          <p class="fixture-note" id="valid-finding">闭合盒体：每条边恰好被两个三角形共享，Euler 特征数为 2。</p>
+          <div class="fixture-file"><code>fixtures/valid-scene.json</code><button data-load="valid">载入</button></div>
+        </article>
+
+        <article class="validation-card invalid-card" id="card-invalid">
+          <div class="validation-head">
+            <div><span class="fixture-tag">FIXTURE B</span><h3>非水密网格</h3></div>
+            <span class="validation-badge" id="invalid-badge">REJECT</span>
+          </div>
+          <canvas id="canvas-invalid-mesh" class="mesh-canvas" width="300" height="186"></canvas>
+          <div class="mesh-stats" id="invalid-mesh-stats">
+            <span>v <b>—</b></span><span>f <b>—</b></span><span>e <b>—</b></span><span>χ <b>—</b></span>
+          </div>
+          <p class="fixture-note" id="invalid-finding">缺失顶面后出现 4 条边界边，Euler 特征数降为 1，必须拒绝。</p>
+          <div class="fixture-file"><code>fixtures/nonwatertight-scene.json</code><button data-load="invalid">载入</button></div>
+        </article>
+
+        <article class="panel acceptance-card">
+          <div class="panel-heading">
+            <span class="index">06</span>
+            <div><h2>逐步复现验收</h2><p>浏览器 + 命令行双路径</p></div>
+          </div>
+          <ol class="steps">
+            <li><b>启动</b><span><code>npm start</code>，打开 <code>http://127.0.0.1:8080</code>；状态条应显示“输入合法”。</span></li>
+            <li><b>看形状</b><span>固定 α=0.12，比较 RECT 与 DISK 的方/圆高光；MC 图的颗粒是有限样本噪声。</span></li>
+            <li><b>加样本</b><span>将 spp 从 4 提到 128，观察 RECT/DISK 的相对 L1 下降、σ 缩小且高光轮廓趋近解析图。</span></li>
+            <li><b>查连续</b><span>看粗糙度渐变条：高光形状平滑伸缩；断点 α=0.14/0.32/0.58 处连续跳变应小于 1%。</span></li>
+            <li><b>读曲线</b><span>LTC 矩阵 a/b/c/d 曲线无台阶；红色最近邻量化为反例，应产生明显跳变。</span></li>
+            <li><b>验输入</b><span>点击“非水密”样例，应报告 4 条边界边、χ=1；重新载入合法样例恢复 PASS。</span></li>
+            <li><b>跑回归</b><span><code>npm test</code> 覆盖解析/采样误差、连续性、方向分布与网格门禁；<code>npm run validate</code> 生成 artifacts。</span></li>
+          </ol>
+          <div class="acceptance-command">
+            <span>一键核验</span>
+            <code>npm test && npm run validate</code>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div><span class="formula-tag">EVALUATION</span><code>E = ∫<sub>Ω</sub> D<sub>LTC</sub>(ω) dω</code></div>
+    <div><span class="formula-tag">SAMPLER</span><code>w = D<sub>LTC</sub>(ω<sub>i</sub>) · A · cosθ<sub>L</sub> / r²</code></div>
+    <div><span class="formula-tag">MATRIX</span><code>M⁻¹ = [[a,0,c],[0,1,0],[b,0,d]]</code></div>
+    <p>数据：three.js r170 标准 GGX-LTC 拟合表 · 原始方法：Heitz et al. 2016 · 页面不依赖第三方运行时。</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

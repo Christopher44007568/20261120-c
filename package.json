@@ -1,0 +1,13 @@
+{
+  "name": "ltc-area-light-continuity-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rectangle and disk area-light rendering with LTC and Monte Carlo validation.",
+  "scripts": {
+    "start": "python3 -m http.server 8080 --bind 127.0.0.1",
+    "test": "node test/core.test.mjs",
+    "validate": "node tools/validate.mjs",
+    "build:ltc": "node tools/build-ltc-data.mjs"
+  }
+}

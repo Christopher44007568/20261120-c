@@ -1,0 +1,47 @@
+{
+  "schema": "ltc-area-light-scene/1",
+  "name": "合法输入 · 闭合盒体代理",
+  "emitter": {
+    "type": "rect",
+    "center": [-0.3, 0.25, 1.55],
+    "halfWidth": 0.8,
+    "halfHeight": 0.5
+  },
+  "surface": {
+    "roughnessMin": 0.045,
+    "roughnessMax": 0.82,
+    "gradient": "piecewise-linear"
+  },
+  "sampling": {
+    "spp": 16,
+    "seed": 7,
+    "methods": ["ltc-analytic", "area-monte-carlo"]
+  },
+  "mesh": {
+    "name": "closed-emitter-housing",
+    "vertices": [
+      [-1, -1, -1],
+      [1, -1, -1],
+      [1, 1, -1],
+      [-1, 1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [1, 1, 1],
+      [-1, 1, 1]
+    ],
+    "triangles": [
+      [0, 2, 1],
+      [0, 3, 2],
+      [4, 5, 6],
+      [4, 6, 7],
+      [0, 1, 5],
+      [0, 5, 4],
+      [1, 2, 6],
+      [1, 6, 5],
+      [2, 3, 7],
+      [2, 7, 6],
+      [3, 0, 4],
+      [3, 4, 7]
+    ]
+  }
+}

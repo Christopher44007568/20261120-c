@@ -1,0 +1,44 @@
+{
+  "schema": "ltc-area-light-scene/1",
+  "name": "非水密输入 · 缺失顶面",
+  "emitter": {
+    "type": "disk",
+    "center": [-0.3, 0.25, 1.55],
+    "radius": 0.7136
+  },
+  "surface": {
+    "roughnessMin": 0.045,
+    "roughnessMax": 0.82,
+    "gradient": "piecewise-linear"
+  },
+  "sampling": {
+    "spp": 16,
+    "seed": 7,
+    "methods": ["ltc-analytic", "area-monte-carlo"]
+  },
+  "mesh": {
+    "name": "missing-top-face",
+    "vertices": [
+      [-1, -1, -1],
+      [1, -1, -1],
+      [1, 1, -1],
+      [-1, 1, -1],
+      [-1, -1, 1],
+      [1, -1, 1],
+      [1, 1, 1],
+      [-1, 1, 1]
+    ],
+    "triangles": [
+      [0, 2, 1],
+      [0, 3, 2],
+      [0, 1, 5],
+      [0, 5, 4],
+      [1, 2, 6],
+      [1, 6, 5],
+      [2, 3, 7],
+      [2, 7, 6],
+      [3, 0, 4],
+      [3, 4, 7]
+    ]
+  }
+}
