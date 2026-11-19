@@ -1,0 +1,36 @@
+{
+  "width": 160,
+  "height": 120,
+  "max_depth": 8,
+  "threads": 12,
+  "spp_values": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256
+  ],
+  "repeats": 3,
+  "reference_spp": {
+    "indirect": 4096,
+    "interior": 4096,
+    "caustic": 8192
+  },
+  "time_budget_seconds": 1.0,
+  "caustic_roi_normalized": [
+    0.35,
+    0.65,
+    0.6,
+    0.85
+  ],
+  "elapsed_seconds": 160.6549322605133,
+  "convergence_csv": "convergence.csv",
+  "equal_time_csv": "equal_time.csv",
+  "variance_csv": "variance_summary.csv",
+  "error_curve_svg": "error_curves.svg",
+  "equal_time_svg": "equal_time_error.svg"
+}

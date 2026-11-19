@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="460" viewBox="0 0 900 460">
+<rect width="100%" height="100%" fill="#fbfaf7"/>
+<style>text{font-family:Inter,Arial,sans-serif;fill:#222}.title{font-size:17px;font-weight:600}.axis{font-size:11px}.label{font-size:12px}.value{font-size:10px;font-weight:600}</style>
+<text x="20" y="26" class="title">Equal wall-clock error (1.0 s budget)</text>
+<line x1="76" y1="378.00" x2="872" y2="378.00" stroke="#dedbd3"/>
+<text x="67" y="382.00" text-anchor="end" class="axis">0.001</text>
+<line x1="76" y1="270.00" x2="872" y2="270.00" stroke="#dedbd3"/>
+<text x="67" y="274.00" text-anchor="end" class="axis">0.01</text>
+<line x1="76" y1="162.00" x2="872" y2="162.00" stroke="#dedbd3"/>
+<text x="67" y="166.00" text-anchor="end" class="axis">0.1</text>
+<line x1="76" y1="54.00" x2="872" y2="54.00" stroke="#dedbd3"/>
+<text x="67" y="58.00" text-anchor="end" class="axis">1</text>
+<line x1="76" y1="378" x2="872" y2="378" stroke="#777" stroke-width="1.2"/>
+<line x1="76" y1="54" x2="76" y2="378" stroke="#777" stroke-width="1.2"/>
+<text x="16" y="216.0" class="label" transform="rotate(-90 16 216.0)" text-anchor="middle">MSE (log scale)</text>
+<text x="208.67" y="402" text-anchor="middle" class="label">indirect</text>
+<rect x="133.47" y="215.63" width="68.99" height="162.37" fill="#d95f02" rx="2"/>
+<text x="167.96" y="209.63" text-anchor="middle" class="value">0.03187</text>
+<text x="167.96" y="418.00" text-anchor="middle" class="axis">741 spp</text>
+<rect x="214.88" y="296.82" width="68.99" height="81.18" fill="#1b6ca8" rx="2"/>
+<text x="249.37" y="290.82" text-anchor="middle" class="value">0.005645</text>
+<text x="249.37" y="418.00" text-anchor="middle" class="axis">335 spp</text>
+<text x="474.00" y="402" text-anchor="middle" class="label">interior</text>
+<rect x="398.80" y="122.30" width="68.99" height="255.70" fill="#d95f02" rx="2"/>
+<text x="433.30" y="116.30" text-anchor="middle" class="value">0.2331</text>
+<text x="433.30" y="418.00" text-anchor="middle" class="axis">242 spp</text>
+<rect x="480.21" y="286.77" width="68.99" height="91.23" fill="#1b6ca8" rx="2"/>
+<text x="514.70" y="280.77" text-anchor="middle" class="value">0.006994</text>
+<text x="514.70" y="418.00" text-anchor="middle" class="axis">227 spp</text>
+<text x="739.33" y="402" text-anchor="middle" class="label">caustic</text>
+<rect x="664.14" y="152.80" width="68.99" height="225.20" fill="#d95f02" rx="2"/>
+<text x="698.63" y="146.80" text-anchor="middle" class="value">0.1217</text>
+<text x="698.63" y="418.00" text-anchor="middle" class="axis">397 spp</text>
+<rect x="745.54" y="236.88" width="68.99" height="141.12" fill="#1b6ca8" rx="2"/>
+<text x="780.04" y="230.88" text-anchor="middle" class="value">0.02026</text>
+<text x="780.04" y="418.00" text-anchor="middle" class="axis">86 spp</text>
+<rect x="600" y="432" width="14" height="10" fill="#d95f02"/>
+<text x="620" y="441" class="label">Unidirectional PT</text>
+<rect x="745" y="432" width="14" height="10" fill="#1b6ca8"/>
+<text x="765" y="441" class="label">BDPT + MIS</text>
+</svg>
