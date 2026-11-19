@@ -1,0 +1,14 @@
+{
+  "name": "stencil-shadow-volume-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 4173",
+    "test": "node tests/verify.mjs",
+    "capture": "node scripts/capture.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

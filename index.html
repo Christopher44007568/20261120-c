@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stencil Shadow Volume Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div>
+          <p class="eyebrow">REAL-TIME SHADOWS / WEBGL2</p>
+          <h1>Stencil Shadow Volume Lab</h1>
+        </div>
+      </div>
+      <div class="live-badge"><span></span> GPU STENCIL ACTIVE</div>
+    </header>
+
+    <main class="workspace">
+      <section class="stage-panel">
+        <div class="stage-head">
+          <div class="mode-tabs" role="tablist" aria-label="Rendering mode">
+            <button class="mode-tab active" data-mode="stencil">Stencil Volume</button>
+            <button class="mode-tab" data-mode="shadowmap">Shadow Map</button>
+            <button class="mode-tab" data-mode="split">Split Compare</button>
+          </div>
+          <div class="stage-tools">
+            <button id="debug-toggle" class="ghost-button" aria-pressed="false">Mask</button>
+            <button id="volume-toggle" class="ghost-button" aria-pressed="false">Volume</button>
+            <button id="pause-toggle" class="icon-button" title="Pause animation" aria-label="Pause animation">
+              <span class="pause-icon"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="viewport-wrap">
+          <canvas id="viewport" width="960" height="620"></canvas>
+          <div id="split-labels" class="split-labels hidden">
+            <span>STENCIL / EXACT</span>
+            <span id="smap-label">SHADOW MAP / 1024²</span>
+          </div>
+          <div class="hud hud-tl">
+            <span id="mesh-hud">CLOSED SPHERE</span>
+            <span id="camera-hud">CAMERA OUTSIDE</span>
+          </div>
+          <div id="inside-banner" class="inside-banner hidden">
+            <span class="pulse-dot"></span>
+            CAMERA INSIDE SHADOW VOLUME
+          </div>
+          <div class="hud hud-br">
+            <span id="frame-hud">ZFILL · CAPS ON · 0.0 MS</span>
+          </div>
+        </div>
+
+        <div class="stage-foot">
+          <div class="legend">
+            <span><i class="legend-swatch stencil-swatch"></i>模板阴影</span>
+            <span><i class="legend-swatch smap-swatch"></i>阴影贴图</span>
+            <span><i class="legend-swatch cap-swatch"></i>封帽</span>
+          </div>
+          <p id="status-line">模板缓冲已就绪。选择场景与相机位置进行验证。</p>
+        </div>
+      </section>
+
+      <aside class="control-rail">
+        <section class="control-group">
+          <div class="group-title"><span>01</span>Geometry</div>
+          <div class="segmented mesh-options">
+            <button class="segment active" data-mesh="closed"><strong>闭合球</strong><small>闭合网格</small></button>
+            <button class="segment" data-mesh="open"><strong>开放面</strong><small>单层网格</small></button>
+            <button class="segment" data-mesh="plank"><strong>细长板</strong><small>边缘测试</small></button>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <div class="group-title"><span>02</span>Camera</div>
+          <div class="segmented camera-options">
+            <button class="segment active" data-camera="outside"><strong>外部</strong><small>Z-PASS 基准</small></button>
+            <button class="segment" data-camera="inside"><strong>体内</strong><small>封帽关键</small></button>
+            <button class="segment" data-camera="enter"><strong>穿越</strong><small>动态计数</small></button>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <div class="group-title"><span>03</span>Volume Setup</div>
+          <label class="switch-row">
+            <span>近端 / 远端封帽<small>开放网格使用三角棱柱封帽</small></span>
+            <input id="caps-input" type="checkbox" checked>
+            <i></i>
+          </label>
+          <label class="switch-row">
+            <span>Z-Fail 稳健算法<small>相机在阴影体内时保持计数</small></span>
+            <input id="zfail-input" type="checkbox" checked>
+            <i></i>
+          </label>
+          <label class="select-row" for="smap-size">
+            <span>阴影贴图分辨率</span>
+            <select id="smap-size">
+              <option value="512">512 × 512</option>
+              <option value="1024" selected>1024 × 1024</option>
+              <option value="2048">2048 × 2048</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="metrics-group">
+          <div class="group-title"><span>04</span>Live Metrics</div>
+          <div class="metric-hero">
+            <span>SHADOW VOLUME TRIANGLES</span>
+            <strong id="volume-tris">—</strong>
+            <small id="mesh-tris">mesh triangles —</small>
+          </div>
+          <div class="metric-grid">
+            <div><span>Volume fill</span><strong id="fill-rate">—</strong></div>
+            <div><span>Coverage</span><strong id="fill-pixels">—</strong></div>
+            <div><span>Stencil ≠ 0</span><strong id="stencil-nonzero">—</strong></div>
+            <div><span>Max count</span><strong id="max-count">—</strong></div>
+          </div>
+          <div class="histogram-wrap">
+            <div class="histogram-head"><span>模板计数直方图</span><span id="hist-source">GPU QUERY</span></div>
+            <div id="histogram" class="histogram"></div>
+          </div>
+        </section>
+
+        <section class="quality-card" id="quality-card">
+          <div class="quality-head">
+            <span>THIN EDGE QUALITY</span>
+            <strong id="quality-verdict">待测</strong>
+          </div>
+          <div class="quality-bars">
+            <div><span>Stencil</span><i><b id="stencil-edge-bar"></b></i><em id="stencil-edge">—</em></div>
+            <div><span>Shadow map</span><i><b id="smap-edge-bar"></b></i><em id="smap-edge">—</em></div>
+          </div>
+          <p>指标为阴影边缘的逐行粗糙度 RMS，越低越锐利。</p>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>WebGL2 · DEPTH24_STENCIL8 · Z-FAIL</span>
+      <span id="gpu-name">Detecting GPU…</span>
+      <span id="clock">00:00:00</span>
+    </footer>
+  </div>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
