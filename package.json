@@ -1,0 +1,12 @@
+{
+  "name": "hull-dual-audit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Degeneracy-aware 3D convex hull, Delaunay tetrahedralization and shadow-volume capping audit.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tests/verify.mjs",
+    "report": "node scripts/report.mjs"
+  }
+}

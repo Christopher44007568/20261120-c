@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071012" />
+    <title>HULL / DUAL — 三维凸包与 Delaunay 审计台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23071012'/%3E%3Cpath d='M16 5 27 24H5zM16 5v19M5 24l11-9 11 9' fill='none' stroke='%235ce4c2' stroke-width='1.2'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 46 46" aria-hidden="true">
+            <path class="mark-outer" d="M23 5 41 36H5z" />
+            <path class="mark-inner" d="M23 5v31M5 36l18-14 18 14M14 18h18" />
+            <circle cx="23" cy="22" r="2.2" />
+          </svg>
+          <div>
+            <div class="brand-name">HULL<span>/DUAL</span></div>
+            <div class="brand-sub">3D DELAUNAY AUDIT STATION</div>
+          </div>
+        </div>
+        <div class="topbar-meta">
+          <span class="meta-item"><i class="live-dot"></i><span id="system-state">KERNEL READY</span></span>
+          <span class="meta-divider"></span>
+          <span class="mono">FP64 PREDICATES</span>
+          <span class="meta-divider"></span>
+          <span class="mono" id="clock">00:00:00.000</span>
+        </div>
+        <div class="top-actions">
+          <button class="text-button" id="export-button" type="button">
+            <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2v9m0 0 3.5-3.5M9 11 5.5 7.5M3 13v2h12v-2" /></svg>
+            导出 JSON
+          </button>
+          <button class="icon-button" id="help-button" type="button" aria-label="显示说明">?</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="stage-card" aria-label="三维几何视图">
+          <div class="stage-head">
+            <div class="stage-title">
+              <span class="eyebrow">WATERTIGHT COMPUTATIONAL GEOMETRY</span>
+              <h1>三维凸包 × Delaunay 四面体审计台</h1>
+            </div>
+            <div class="dataset-tabs" id="dataset-tabs" role="tablist" aria-label="点集选择"></div>
+          </div>
+
+          <div class="stage" id="stage">
+            <canvas id="mesh-canvas" aria-label="三维凸包、Delaunay 四面体与阴影体视图"></canvas>
+            <div class="stage-scan" aria-hidden="true"></div>
+
+            <div class="scene-badge">
+              <span class="eyebrow">ACTIVE CASE</span>
+              <strong id="active-case-name">随机点集</strong>
+              <span id="active-case-description">确定性高斯云</span>
+            </div>
+
+            <div class="live-audit" id="live-audit">
+              <div class="live-audit-head">
+                <span>TOPOLOGY</span>
+                <span class="status-pill pass" id="topology-status">PASS</span>
+              </div>
+              <div class="live-row"><span>凸包封闭</span><b id="hull-closed-live">YES</b></div>
+              <div class="live-row"><span>四面体流形</span><b id="tet-manifold-live">YES</b></div>
+              <div class="live-row"><span>空球条件</span><b id="empty-sphere-live">YES</b></div>
+              <div class="live-row"><span>体积守恒</span><b id="volume-live">YES</b></div>
+            </div>
+
+            <div class="mode-switch" role="group" aria-label="显示模式">
+              <button class="mode-button active" data-mode="hull" type="button"><i class="mode-swatch hull"></i>凸包</button>
+              <button class="mode-button" data-mode="tetra" type="button"><i class="mode-swatch tetra"></i>四面体</button>
+              <button class="mode-button" data-mode="shadow" type="button"><i class="mode-swatch shadow"></i>阴影体</button>
+            </div>
+
+            <div class="legend" id="legend">
+              <span><i class="legend-dot hull"></i>凸包顶点</span>
+              <span><i class="legend-dot interior"></i>内部点</span>
+              <span><i class="legend-line hull"></i>网格边</span>
+            </div>
+
+            <div class="stage-tools">
+              <button class="square-tool" id="reset-view-button" type="button" aria-label="重置视角">
+                <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 7A6 6 0 1 0 15 11M14.5 3v4h-4" /></svg>
+              </button>
+              <span class="drag-hint">拖拽旋转 · 滚轮缩放 · 双击复位</span>
+            </div>
+
+            <div class="replay-panel" id="replay-panel">
+              <button class="replay-button" id="replay-button" type="button" aria-label="回放相机穿越">
+                <svg class="replay-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2 12 8l-7 4.8z" /></svg>
+              </button>
+              <div class="replay-copy">
+                <div class="replay-line">
+                  <span>CAMERA / SHADOW VOLUME</span>
+                  <b class="mono" id="template-live">TEMPLATE Σ 0</b>
+                </div>
+                <div class="replay-track">
+                  <span id="replay-fill"></span>
+                  <i class="replay-mark enter" id="enter-mark"></i>
+                  <i class="replay-mark exit" id="exit-mark"></i>
+                </div>
+              </div>
+              <span class="mono replay-state" id="replay-state">READY</span>
+            </div>
+          </div>
+
+          <div class="crossing-strip">
+            <div class="crossing-heading">
+              <div>
+                <span class="eyebrow">STENCIL TEMPLATE FLIPS</span>
+                <strong>相机穿越阴影体记录</strong>
+              </div>
+              <span class="crossing-verdict pass" id="cap-verdict">封帽正确</span>
+            </div>
+            <div class="crossing-log" id="crossing-log"></div>
+          </div>
+        </section>
+
+        <aside class="inspector">
+          <div class="inspector-head">
+            <div>
+              <span class="eyebrow">CASE INSPECTOR</span>
+              <h2 id="inspector-title">随机点集</h2>
+            </div>
+            <span class="status-pill pass" id="case-pass">VALID</span>
+          </div>
+
+          <section class="count-section">
+            <div class="section-label"><span>MESH COUNTS</span><span>3D</span></div>
+            <div class="count-grid">
+              <article class="count-card"><span>顶点</span><strong id="count-vertices">0</strong><small id="count-vertices-note">V</small></article>
+              <article class="count-card"><span>边</span><strong id="count-edges">0</strong><small id="count-edges-note">E</small></article>
+              <article class="count-card"><span>凸包面</span><strong id="count-faces">0</strong><small id="count-faces-note">F</small></article>
+              <article class="count-card accent"><span>四面体</span><strong id="count-tets">0</strong><small id="count-tets-note">T</small></article>
+            </div>
+          </section>
+
+          <section class="audit-section">
+            <div class="section-label"><span>TOPOLOGY AUDIT</span><span id="euler-label">χ = 2</span></div>
+            <div class="audit-list" id="audit-list"></div>
+          </section>
+
+          <section class="degenerate-section">
+            <div class="section-label"><span>DEGENERACY LEDGER</span><span>SOURCE</span></div>
+            <div class="ledger" id="degeneracy-ledger"></div>
+          </section>
+
+          <section class="strategy-brief">
+            <div class="section-label"><span>HANDLING STRATEGY</span><span>AUTO</span></div>
+            <p id="strategy-summary"></p>
+            <button class="link-button" id="strategy-button" type="button">查看完整策略 <span>→</span></button>
+          </section>
+        </aside>
+      </main>
+
+      <section class="analysis-grid">
+        <article class="matrix-card">
+          <div class="card-heading">
+            <div>
+              <span class="eyebrow">REGRESSION MATRIX</span>
+              <h2>五组点集封闭性与拓扑一致性</h2>
+            </div>
+            <span class="mono card-tag">AUTO-TESTED</span>
+          </div>
+          <div class="table-wrap">
+            <table class="case-table">
+              <thead>
+                <tr>
+                  <th>点集</th><th>处理路径</th><th class="num">V</th><th class="num">E</th>
+                  <th class="num">F</th><th class="num">T</th><th class="num">χ</th><th>结果</th>
+                </tr>
+              </thead>
+              <tbody id="case-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="method-card" id="method-card">
+          <div class="card-heading">
+            <div>
+              <span class="eyebrow">ROBUSTNESS PLAYBOOK</span>
+              <h2>退化处理策略</h2>
+            </div>
+            <span class="mono card-tag">3 LAYERS</span>
+          </div>
+          <ol class="method-list">
+            <li>
+              <span class="method-index">01</span>
+              <div><b>共面：降维 + 双支撑</b><p>内在维数 2 时投影到平面做二维 Delaunay，再在法向两侧添加合成支撑点，形成封闭双锥四面体网格。</p></div>
+            </li>
+            <li>
+              <span class="method-index">02</span>
+              <div><b>共球：确定性符号扰动</b><p>三维路径使用有界正则化坐标打破共球平局；源坐标只用于退化计数，最大位移与包围盒尺度的比值显示在审计面板。</p></div>
+            </li>
+            <li>
+              <span class="method-index">03</span>
+              <div><b>封帽：双端帽 + 轮廓扫掠</b><p>近端帽取受光面，远端帽取背面平移副本，侧面连接轮廓边。每个无向边恰好入射两个三角面，避免相机进入体后模板计数翻转。</p></div>
+            </li>
+          </ol>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <span>HULL / DUAL · DETERMINISTIC REGRESSION</span>
+        <span class="mono" id="footer-summary">5 / 5 CASES PASS</span>
+      </footer>
+    </div>
+
+    <dialog class="help-dialog" id="help-dialog">
+      <div class="dialog-head">
+        <span class="eyebrow">FIELD NOTES</span>
+        <button class="icon-button" id="close-help" type="button" aria-label="关闭">×</button>
+      </div>
+      <h2>如何阅读审计台</h2>
+      <p>切换五组固定种子点集。凸包用绿色半透明面与亮色边表示，四面体用蓝色边表示。进入阴影体模式后，青绿色为近端封帽，橙色为远端封帽，紫色为轮廓侧面。</p>
+      <p>“模板计数”按封闭阴影体的内外状态定义：外侧 0、内侧 1。相机沿光线方向穿过体时，应在近端帽 +1、在远端帽 −1；严格回到 0 才判定封帽正确。</p>
+      <div class="dialog-note">
+        <b>退化口径</b>
+        <span>共面点簇统计至少 8 点共享的极大平面；共球命中统计最终四面体空球边界上的源点数。</span>
+      </div>
+      <button class="primary-button" id="dialog-confirm" type="button">进入审计台</button>
+    </dialog>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
