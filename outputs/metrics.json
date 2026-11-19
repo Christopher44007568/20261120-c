@@ -1,0 +1,79 @@
+{
+  "environment": {
+    "width": 128,
+    "height": 64,
+    "mip_levels": 5,
+    "max_luminance": 14937.7057269266,
+    "mean_luminance": 16.5576853935,
+    "dynamic_range_99pct": 761140.6257586848,
+    "highlight_solid_angle_fraction": 0.0129358506,
+    "highlight_energy_fraction": 0.8250458899
+  },
+  "direction_sampling": {
+    "samples_per_method": 1000000,
+    "highlight_margin_deg": 1.5000000000,
+    "uniform_highlight_fraction": 0.0130520000,
+    "importance_highlight_fraction": 0.8256350000,
+    "uniform_density_per_sr": 80291.9879460724,
+    "importance_density_per_sr": 5079058.8007857436,
+    "density_ratio": 63.2573551946,
+    "highlight_oversampled": true,
+    "all_regions_oversampled": true,
+    "avoid_highlight_undersampling": true,
+    "regions": [
+      {"name": "key_sun", "solid_angle": 0.0236213638, "energy_fraction": 0.3266630327, "importance_samples": 326890, "importance_fraction": 0.3268900000, "uniform_expected_samples": 1879.7284038444, "importance_density_per_sr": 13838743.7357721198, "uniform_density_per_sr": 79577.4715459477, "density_ratio": 173.9027826209},
+      {"name": "rim_light", "solid_angle": 0.0160788423, "energy_fraction": 0.2567729135, "importance_samples": 256683, "importance_fraction": 0.2566830000, "uniform_expected_samples": 1279.5136118335, "importance_density_per_sr": 15964022.5316231996, "uniform_density_per_sr": 79577.4715459477, "density_ratio": 200.6098236284},
+      {"name": "softbox", "solid_angle": 0.1228564865, "energy_fraction": 0.2416099437, "importance_samples": 242062, "importance_fraction": 0.2420620000, "uniform_expected_samples": 9776.6085615342, "importance_density_per_sr": 1970282.6185701741, "uniform_density_per_sr": 79577.4715459477, "density_ratio": 24.7593016000}
+    ]
+  },
+  "render": {
+    "width": 160,
+    "height": 160,
+    "sphere_pixels": 14884,
+    "spp_per_frame": 16,
+    "frames_for_variance": 12,
+    "total_attempts_per_pixel": 192,
+    "roughness": 0.3200000000,
+    "reference": "mip0_direct_texel_quadrature",
+    "noise_reduction_uniform_to_importance": 3.7217300107,
+    "methods": {
+      "uniform": {
+      "mean_pixel_variance": 8843.7759590046,
+      "mean_pixel_std": 23.0666633284,
+      "highlight_mean_pixel_variance": 187489.2069763434,
+      "highlight_mean_pixel_std": 319.8404015505,
+      "relative_noise": 1.6839524924,
+      "highlight_relative_noise": 1.7767558242,
+      "p95_pixel_std": 113.3747130711,
+      "max_pixel_std": 2638.2316231848,
+      "rmse_vs_mip0_reference": 30.9728008789,
+      "mean_valid_spp_fraction": 1.0000000000,
+      "mean_mip_lod": 2.1005106154,
+      "configured_spp": 16,
+      "frames": 12,
+      "highlight_pixels": 193
+    },
+      "importance": {
+      "mean_pixel_variance": 369.1226446020,
+      "mean_pixel_std": 6.1978336048,
+      "highlight_mean_pixel_variance": 8991.1561049415,
+      "highlight_mean_pixel_std": 87.3082527647,
+      "relative_noise": 0.4629554387,
+      "highlight_relative_noise": 0.4393074172,
+      "p95_pixel_std": 35.9167788129,
+      "max_pixel_std": 281.4485884525,
+      "rmse_vs_mip0_reference": 13.1475597424,
+      "mean_valid_spp_fraction": 0.6353267351,
+      "mean_mip_lod": 2.0134260503,
+      "configured_spp": 16,
+      "frames": 12,
+      "highlight_pixels": 193
+    }
+    }
+  },
+  "mip_policies": [
+    {"policy": "mip0", "mean_mip_lod": 0.0000000000, "mean_pixel_variance": 343.9989047158, "mean_pixel_std": 5.8267404124, "relative_noise": 0.4372887643, "p95_pixel_std": 32.4975239444, "rmse_vs_mip0_reference": 4.9860170721},
+    {"policy": "roughness", "mean_mip_lod": 0.9546772821, "mean_pixel_variance": 352.1539662966, "mean_pixel_std": 5.9662111209, "relative_noise": 0.4489129601, "p95_pixel_std": 33.2513505658, "rmse_vs_mip0_reference": 8.3741548540},
+    {"policy": "lobe_footprint", "mean_mip_lod": 2.0134260503, "mean_pixel_variance": 369.1226446020, "mean_pixel_std": 6.1978336048, "relative_noise": 0.4629554387, "p95_pixel_std": 35.9167788129, "rmse_vs_mip0_reference": 13.1475597424}
+  ]
+}
