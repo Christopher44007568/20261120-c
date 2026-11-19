@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" font-family="sans-serif">
+<rect width="760" height="460" fill="white"/>
+<text x="380.0" y="26" font-size="17" font-weight="bold" text-anchor="middle">Tiled vs immediate: total time by tile size (100k triangles)</text>
+<line x1="78" y1="46.0" x2="736" y2="46.0" stroke="#e5e7eb"/>
+<text x="70" y="50.0" font-size="11" text-anchor="end" fill="#374151">2.0</text>
+<line x1="78" y1="116.4" x2="736" y2="116.4" stroke="#e5e7eb"/>
+<text x="70" y="120.4" font-size="11" text-anchor="end" fill="#374151">1.6</text>
+<line x1="78" y1="186.8" x2="736" y2="186.8" stroke="#e5e7eb"/>
+<text x="70" y="190.8" font-size="11" text-anchor="end" fill="#374151">1.2</text>
+<line x1="78" y1="257.2" x2="736" y2="257.2" stroke="#e5e7eb"/>
+<text x="70" y="261.2" font-size="11" text-anchor="end" fill="#374151">0.782</text>
+<line x1="78" y1="327.6" x2="736" y2="327.6" stroke="#e5e7eb"/>
+<text x="70" y="331.6" font-size="11" text-anchor="end" fill="#374151">0.391</text>
+<line x1="78" y1="398.0" x2="736" y2="398.0" stroke="#e5e7eb"/>
+<text x="70" y="402.0" font-size="11" text-anchor="end" fill="#374151">0.000</text>
+<line x1="78" y1="46" x2="78" y2="398" stroke="#374151"/>
+<line x1="78" y1="398" x2="736" y2="398" stroke="#374151"/>
+<text x="132.8" y="416" font-size="11" text-anchor="middle" fill="#374151">8</text>
+<text x="242.5" y="416" font-size="11" text-anchor="middle" fill="#374151">16</text>
+<text x="352.2" y="416" font-size="11" text-anchor="middle" fill="#374151">32</text>
+<text x="461.8" y="416" font-size="11" text-anchor="middle" fill="#374151">64</text>
+<text x="571.5" y="416" font-size="11" text-anchor="middle" fill="#374151">128</text>
+<text x="681.2" y="416" font-size="11" text-anchor="middle" fill="#374151">256</text>
+<text x="407.0" y="448" font-size="12" text-anchor="middle">tile size (px)</text>
+<text transform="translate(20,222.0) rotate(-90)" font-size="12" text-anchor="middle">modeled time (s)</text>
+<path d="M 132.8,394.2 L 242.5,396.1 L 352.2,396.5 L 461.8,395.5 L 571.5,392.2 L 681.2,379.8" fill="none" stroke="#2563eb" stroke-width="2"/>
+<circle cx="132.8" cy="394.2" r="3.4" fill="#2563eb"/>
+<circle cx="242.5" cy="396.1" r="3.4" fill="#2563eb"/>
+<circle cx="352.2" cy="396.5" r="3.4" fill="#2563eb"/>
+<circle cx="461.8" cy="395.5" r="3.4" fill="#2563eb"/>
+<circle cx="571.5" cy="392.2" r="3.4" fill="#2563eb"/>
+<circle cx="681.2" cy="379.8" r="3.4" fill="#2563eb"/>
+<rect x="578" y="52" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="60" x2="602" y2="60" stroke="#2563eb" stroke-width="2.5"/>
+<text x="608" y="64" font-size="11" fill="#111827">clustered tiled</text>
+<path d="M 132.8,393.2 L 242.5,395.8 L 352.2,396.3 L 461.8,395.5 L 571.5,392.2 L 681.2,381.0" fill="none" stroke="#dc2626" stroke-width="2"/>
+<circle cx="132.8" cy="393.2" r="3.4" fill="#dc2626"/>
+<circle cx="242.5" cy="395.8" r="3.4" fill="#dc2626"/>
+<circle cx="352.2" cy="396.3" r="3.4" fill="#dc2626"/>
+<circle cx="461.8" cy="395.5" r="3.4" fill="#dc2626"/>
+<circle cx="571.5" cy="392.2" r="3.4" fill="#dc2626"/>
+<circle cx="681.2" cy="381.0" r="3.4" fill="#dc2626"/>
+<rect x="578" y="70" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="78" x2="602" y2="78" stroke="#dc2626" stroke-width="2.5"/>
+<text x="608" y="82" font-size="11" fill="#111827">uniform tiled</text>
+<path d="M 132.8,46.0 L 242.5,287.3 L 352.2,348.3 L 461.8,360.0 L 571.5,353.2 L 681.2,329.4" fill="none" stroke="#16a34a" stroke-width="2"/>
+<circle cx="132.8" cy="46.0" r="3.4" fill="#16a34a"/>
+<circle cx="242.5" cy="287.3" r="3.4" fill="#16a34a"/>
+<circle cx="352.2" cy="348.3" r="3.4" fill="#16a34a"/>
+<circle cx="461.8" cy="360.0" r="3.4" fill="#16a34a"/>
+<circle cx="571.5" cy="353.2" r="3.4" fill="#16a34a"/>
+<circle cx="681.2" cy="329.4" r="3.4" fill="#16a34a"/>
+<rect x="578" y="88" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="96" x2="602" y2="96" stroke="#16a34a" stroke-width="2.5"/>
+<text x="608" y="100" font-size="11" fill="#111827">large tiled</text>
+<path d="M 132.8,397.0 L 242.5,397.5 L 352.2,397.6 L 461.8,397.3 L 571.5,396.3 L 681.2,392.4" fill="none" stroke="#9333ea" stroke-width="2"/>
+<circle cx="132.8" cy="397.0" r="3.4" fill="#9333ea"/>
+<circle cx="242.5" cy="397.5" r="3.4" fill="#9333ea"/>
+<circle cx="352.2" cy="397.6" r="3.4" fill="#9333ea"/>
+<circle cx="461.8" cy="397.3" r="3.4" fill="#9333ea"/>
+<circle cx="571.5" cy="396.3" r="3.4" fill="#9333ea"/>
+<circle cx="681.2" cy="392.4" r="3.4" fill="#9333ea"/>
+<rect x="578" y="106" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="114" x2="602" y2="114" stroke="#9333ea" stroke-width="2.5"/>
+<text x="608" y="118" font-size="11" fill="#111827">offscreen tiled</text>
+<path d="M 132.8,394.6 L 242.5,394.6 L 352.2,394.6 L 461.8,394.6 L 571.5,394.6 L 681.2,394.6" fill="none" stroke="#ea580c" stroke-width="2"/>
+<circle cx="132.8" cy="394.6" r="3.4" fill="#ea580c"/>
+<circle cx="242.5" cy="394.6" r="3.4" fill="#ea580c"/>
+<circle cx="352.2" cy="394.6" r="3.4" fill="#ea580c"/>
+<circle cx="461.8" cy="394.6" r="3.4" fill="#ea580c"/>
+<circle cx="571.5" cy="394.6" r="3.4" fill="#ea580c"/>
+<circle cx="681.2" cy="394.6" r="3.4" fill="#ea580c"/>
+<rect x="578" y="124" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="132" x2="602" y2="132" stroke="#ea580c" stroke-width="2.5"/>
+<text x="608" y="136" font-size="11" fill="#111827">immediate (all)</text>
+</svg>

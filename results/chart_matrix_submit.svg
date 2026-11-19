@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" font-family="sans-serif">
+<rect width="760" height="460" fill="white"/>
+<text x="380.0" y="26" font-size="17" font-weight="bold" text-anchor="middle">Tile size x triangle size: submissions per triangle</text>
+<line x1="78" y1="46.0" x2="736" y2="46.0" stroke="#e5e7eb"/>
+<text x="70" y="50.0" font-size="11" text-anchor="end">118</text>
+<line x1="78" y1="116.4" x2="736" y2="116.4" stroke="#e5e7eb"/>
+<text x="70" y="120.4" font-size="11" text-anchor="end">94</text>
+<line x1="78" y1="186.8" x2="736" y2="186.8" stroke="#e5e7eb"/>
+<text x="70" y="190.8" font-size="11" text-anchor="end">71</text>
+<line x1="78" y1="257.2" x2="736" y2="257.2" stroke="#e5e7eb"/>
+<text x="70" y="261.2" font-size="11" text-anchor="end">47</text>
+<line x1="78" y1="327.6" x2="736" y2="327.6" stroke="#e5e7eb"/>
+<text x="70" y="331.6" font-size="11" text-anchor="end">24</text>
+<line x1="78" y1="398.0" x2="736" y2="398.0" stroke="#e5e7eb"/>
+<text x="70" y="402.0" font-size="11" text-anchor="end">0.000</text>
+<rect x="93.7" y="383.8" width="28.2" height="14.2" fill="#2563eb"/>
+<rect x="125.0" y="390.0" width="28.2" height="8.0" fill="#dc2626"/>
+<rect x="156.3" y="392.7" width="28.2" height="5.3" fill="#16a34a"/>
+<rect x="187.7" y="393.6" width="28.2" height="4.4" fill="#9333ea"/>
+<rect x="219.0" y="394.3" width="28.2" height="3.7" fill="#ea580c"/>
+<rect x="250.3" y="394.6" width="28.2" height="3.4" fill="#0891b2"/>
+<text x="187.7" y="416" font-size="12" text-anchor="middle">small</text>
+<rect x="313.0" y="349.6" width="28.2" height="48.4" fill="#2563eb"/>
+<rect x="344.3" y="377.8" width="28.2" height="20.2" fill="#dc2626"/>
+<rect x="375.7" y="387.8" width="28.2" height="10.2" fill="#16a34a"/>
+<rect x="407.0" y="391.2" width="28.2" height="6.8" fill="#9333ea"/>
+<rect x="438.3" y="393.2" width="28.2" height="4.8" fill="#ea580c"/>
+<rect x="469.7" y="393.9" width="28.2" height="4.1" fill="#0891b2"/>
+<text x="407.0" y="416" font-size="12" text-anchor="middle">medium</text>
+<rect x="532.3" y="46.0" width="28.2" height="352.0" fill="#2563eb"/>
+<rect x="563.7" y="288.0" width="28.2" height="110.0" fill="#dc2626"/>
+<rect x="595.0" y="358.5" width="28.2" height="39.5" fill="#16a34a"/>
+<rect x="626.3" y="381.1" width="28.2" height="16.9" fill="#9333ea"/>
+<rect x="657.7" y="389.1" width="28.2" height="8.9" fill="#ea580c"/>
+<rect x="689.0" y="391.9" width="28.2" height="6.1" fill="#0891b2"/>
+<text x="626.3" y="416" font-size="12" text-anchor="middle">large</text>
+<text x="407.0" y="448" font-size="12" text-anchor="middle">triangle size class</text>
+<text transform="translate(20,222.0) rotate(-90)" font-size="12" text-anchor="middle">submissions / triangle</text>
+<rect x="78" y="426" width="13" height="13" fill="#2563eb"/>
+<text x="96" y="437" font-size="11">tile 8px</text>
+<rect x="186" y="426" width="13" height="13" fill="#dc2626"/>
+<text x="204" y="437" font-size="11">tile 16px</text>
+<rect x="294" y="426" width="13" height="13" fill="#16a34a"/>
+<text x="312" y="437" font-size="11">tile 32px</text>
+<rect x="402" y="426" width="13" height="13" fill="#9333ea"/>
+<text x="420" y="437" font-size="11">tile 64px</text>
+<rect x="510" y="426" width="13" height="13" fill="#ea580c"/>
+<text x="528" y="437" font-size="11">tile 128px</text>
+<rect x="618" y="426" width="13" height="13" fill="#0891b2"/>
+<text x="636" y="437" font-size="11">tile 256px</text>
+</svg>

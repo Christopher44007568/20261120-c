@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" font-family="sans-serif">
+<rect width="760" height="460" fill="white"/>
+<text x="380.0" y="26" font-size="17" font-weight="bold" text-anchor="middle">Culling benefit vs scene scale (tile=32, clustered)</text>
+<line x1="78" y1="46.0" x2="736" y2="46.0" stroke="#e5e7eb"/>
+<text x="70" y="50.0" font-size="11" text-anchor="end" fill="#374151">0.187</text>
+<line x1="78" y1="116.4" x2="736" y2="116.4" stroke="#e5e7eb"/>
+<text x="70" y="120.4" font-size="11" text-anchor="end" fill="#374151">0.149</text>
+<line x1="78" y1="186.8" x2="736" y2="186.8" stroke="#e5e7eb"/>
+<text x="70" y="190.8" font-size="11" text-anchor="end" fill="#374151">0.112</text>
+<line x1="78" y1="257.2" x2="736" y2="257.2" stroke="#e5e7eb"/>
+<text x="70" y="261.2" font-size="11" text-anchor="end" fill="#374151">0.075</text>
+<line x1="78" y1="327.6" x2="736" y2="327.6" stroke="#e5e7eb"/>
+<text x="70" y="331.6" font-size="11" text-anchor="end" fill="#374151">0.037</text>
+<line x1="78" y1="398.0" x2="736" y2="398.0" stroke="#e5e7eb"/>
+<text x="70" y="402.0" font-size="11" text-anchor="end" fill="#374151">0.000</text>
+<line x1="78" y1="46" x2="78" y2="398" stroke="#374151"/>
+<line x1="78" y1="398" x2="736" y2="398" stroke="#374151"/>
+<text x="125.0" y="416" font-size="11" text-anchor="middle" fill="#374151">10000</text>
+<text x="219.0" y="416" font-size="11" text-anchor="middle" fill="#374151">25000</text>
+<text x="313.0" y="416" font-size="11" text-anchor="middle" fill="#374151">50000</text>
+<text x="407.0" y="416" font-size="11" text-anchor="middle" fill="#374151">100000</text>
+<text x="501.0" y="416" font-size="11" text-anchor="middle" fill="#374151">250000</text>
+<text x="595.0" y="416" font-size="11" text-anchor="middle" fill="#374151">500000</text>
+<text x="689.0" y="416" font-size="11" text-anchor="middle" fill="#374151">1000000</text>
+<text x="407.0" y="448" font-size="12" text-anchor="middle">triangles</text>
+<text transform="translate(20,222.0) rotate(-90)" font-size="12" text-anchor="middle">modeled time (s)</text>
+<path d="M 125.0,396.4 L 219.0,394.1 L 313.0,390.1 L 407.0,382.2 L 501.0,358.4 L 595.0,318.9 L 689.0,239.9" fill="none" stroke="#2563eb" stroke-width="2"/>
+<circle cx="125.0" cy="396.4" r="3.4" fill="#2563eb"/>
+<circle cx="219.0" cy="394.1" r="3.4" fill="#2563eb"/>
+<circle cx="313.0" cy="390.1" r="3.4" fill="#2563eb"/>
+<circle cx="407.0" cy="382.2" r="3.4" fill="#2563eb"/>
+<circle cx="501.0" cy="358.4" r="3.4" fill="#2563eb"/>
+<circle cx="595.0" cy="318.9" r="3.4" fill="#2563eb"/>
+<circle cx="689.0" cy="239.9" r="3.4" fill="#2563eb"/>
+<rect x="578" y="52" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="60" x2="602" y2="60" stroke="#2563eb" stroke-width="2.5"/>
+<text x="608" y="64" font-size="11" fill="#111827">tiled time</text>
+<path d="M 125.0,394.5 L 219.0,389.2 L 313.0,380.4 L 407.0,362.8 L 501.0,309.9 L 595.0,221.8 L 689.0,46.0" fill="none" stroke="#dc2626" stroke-width="2"/>
+<circle cx="125.0" cy="394.5" r="3.4" fill="#dc2626"/>
+<circle cx="219.0" cy="389.2" r="3.4" fill="#dc2626"/>
+<circle cx="313.0" cy="380.4" r="3.4" fill="#dc2626"/>
+<circle cx="407.0" cy="362.8" r="3.4" fill="#dc2626"/>
+<circle cx="501.0" cy="309.9" r="3.4" fill="#dc2626"/>
+<circle cx="595.0" cy="221.8" r="3.4" fill="#dc2626"/>
+<circle cx="689.0" cy="46.0" r="3.4" fill="#dc2626"/>
+<rect x="578" y="70" width="158" height="15" fill="white" opacity="0.85"/>
+<line x1="582" y1="78" x2="602" y2="78" stroke="#dc2626" stroke-width="2.5"/>
+<text x="608" y="82" font-size="11" fill="#111827">immediate time</text>
+</svg>

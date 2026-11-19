@@ -1,0 +1,13 @@
+# tile=32px tiles=2040 empty=507 maxTriPerTile=2564 meanTriPerActiveTile=222.25 totalBatches=6264
+bucket,trisPerTileRange,tiles
+0,0,507
+1,1-1,53
+2,2-3,64
+3,4-7,111
+4,8-15,178
+5,16-31,213
+6,32-63,92
+7,64-127,103
+8,128-255,184
+9,256-511,304
+10,>=512,231

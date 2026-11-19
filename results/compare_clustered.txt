@@ -1,0 +1,6 @@
+# 1920x1080 scene=clustered tris=100000 scale=1 seed=1234 macro=4 tile=32
+immediate  time=0.0187s submit=100000 batches=1563 emptyTiles=0/0 BW=928.92 MB
+tiled      time=0.0084s submit=340710 batches=6264 emptyTiles=507/2040 BW=52.17 MB
+candidates=400296 macroReject=4167 fineReject=55419 cullRate=14.89%
+speedup=2.227x  BW_ratio_tiled/imm=0.056
+coverageCheck imm=47446868 tiled=47296661
