@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mesh-offset-shelling"
+version = "1.0.0"
+description = "Normal-offset surface generation and robust shell validation"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=2.0",
+  "scipy>=1.13",
+  "trimesh>=4.4",
+  "rtree>=1.2",
+  "manifold3d>=3.4",
+]
+
+[project.scripts]
+mesh-offset-study = "mesh_offset.study:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
