@@ -1,0 +1,11 @@
+{
+  "name": "transparent-rendering-comparator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dual depth peeling vs per-fragment sorted reference for interleaved sheets and glass shells",
+  "scripts": {
+    "test": "node test/smoke.js && node test/invariance.js && node test/dom-smoke.js",
+    "snapshots": "node test/snapshots.js",
+    "serve": "python3 -m http.server 8000"
+  }
+}

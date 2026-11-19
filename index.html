@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>透明渲染对照器 · 双深度剥离 vs 逐片元排序</title>
+<style>
+  :root {
+    --bg: #14161c; --panel: #1d2029; --line: #2c313d;
+    --text: #e6e9ef; --muted: #98a0b0; --accent: #5aa2ff;
+    --ok: #3fbf7f; --loss: #e5534b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 13px/1.5 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  header { padding: 14px 20px 8px; }
+  header h1 { font-size: 17px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); }
+  .layout {
+    display: grid; grid-template-columns: 240px 1fr; gap: 16px;
+    padding: 12px 20px 24px;
+  }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px;
+  }
+  .panel h2 { font-size: 13px; margin: 0 0 10px; color: var(--accent); }
+  .control { margin-bottom: 16px; }
+  .control label { display: block; color: var(--muted); margin-bottom: 5px; }
+  select, input[type="range"] { width: 100%; }
+  select {
+    background: #12141a; color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px;
+  }
+  .order-btn {
+    display: block; width: 100%; text-align: left; margin-bottom: 6px;
+    background: #12141a; color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 9px; cursor: pointer;
+  }
+  .order-btn.active { border-color: var(--accent); background: #1b2740; }
+  .grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px;
+  }
+  .tile h3 { font-size: 12px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+  .tile canvas {
+    width: 100%; aspect-ratio: 1; image-rendering: pixelated;
+    border-radius: 6px; background: #000; display: block;
+  }
+  .hud {
+    grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .hud-pill {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    font-weight: 600; width: fit-content;
+  }
+  .hud-pill.ok { background: rgba(63,191,127,.15); color: var(--ok); }
+  .hud-pill.loss { background: rgba(229,83,75,.18); color: var(--loss); }
+  .hud .line { color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>透明渲染对照器：交错薄片与玻璃壳</h1>
+  <p>双深度剥离（DDP）前后层分离累积 · 统一预乘透明度合成 · CPU 逐片元排序参考</p>
+</header>
+
+<div class="layout">
+  <aside class="panel">
+    <h2>实验控制</h2>
+    <div class="control">
+      <label for="scene-select">模型组</label>
+      <select id="scene-select">
+        <option value="occluder">不透明遮挡物 + 交错透明层</option>
+        <option value="intersect">相交面（薄片与玻璃壳互穿）</option>
+        <option value="coplanar">近共面薄片堆叠</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>剥离轮数预算：<span id="pass-value">4</span></label>
+      <input id="pass-slider" type="range" min="1" max="8" value="4" step="1">
+    </div>
+    <div class="control">
+      <label for="resolution-select">采样分辨率</label>
+      <select id="resolution-select">
+        <option value="120">120 × 120</option>
+        <option value="180" selected>180 × 180</option>
+        <option value="240">240 × 240</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>透明物体绘制顺序</label>
+      <button class="order-btn active" id="order-natural">原始顺序</button>
+      <button class="order-btn" id="order-reverse">交换为逆序</button>
+      <button class="order-btn" id="order-shuffle">随机打乱（重复点击换种子）</button>
+    </div>
+    <p class="hint">在参考图画布上拖拽可旋转相机，滚轮缩放。</p>
+  </aside>
+
+  <main class="grid">
+    <div class="tile">
+      <h3>CPU 参考：逐片元深度排序 + 预乘 over</h3>
+      <canvas id="canvas-ref"></canvas>
+    </div>
+    <div class="tile">
+      <h3>双深度剥离：前/后目标累积，预算受限</h3>
+      <canvas id="canvas-ddp"></canvas>
+    </div>
+    <div class="tile">
+      <h3>乱序单趟 alpha 混合（传统错误对照）</h3>
+      <canvas id="canvas-naive"></canvas>
+    </div>
+    <div class="tile">
+      <h3>像素误差热力图（RGB 欧氏距离）</h3>
+      <canvas id="canvas-error"></canvas>
+    </div>
+    <div class="tile">
+      <h3>仍有未处理片元的像素遮罩（红 = 丢片元）</h3>
+      <canvas id="canvas-leftover"></canvas>
+    </div>
+    <div class="tile">
+      <h3>所需剥离轮数 / 最先失真区域（红）</h3>
+      <canvas id="canvas-budget"></canvas>
+    </div>
+    <div class="hud">
+      <span class="hud-pill ok" id="hud-budget">—</span>
+      <div class="line" id="hud-scene"></div>
+      <div class="line" id="hud-ddp"></div>
+      <div class="line" id="hud-naive"></div>
+      <div class="line" id="hud-order"></div>
+    </div>
+  </main>
+</div>
+
+<script src="src/math.js"></script>
+<script src="src/geometry.js"></script>
+<script src="src/rasterizer.js"></script>
+<script src="src/compositor.js"></script>
+<script src="src/visualization.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
