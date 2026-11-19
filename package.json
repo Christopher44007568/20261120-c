@@ -1,0 +1,14 @@
+{
+  "name": "helio-bus-observatory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Continuous solar lighting and validated four-layer PCB routing observatory.",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "report": "node scripts/export-report.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

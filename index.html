@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="昼夜光照驱动的多层 PCB 布线观测台：太阳高度角、环境光、日落连续性与过孔验证。"
+    />
+    <title>HELIO/BUS · 日照多层布线观测台</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ffb45c'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%236ee7f2' stroke-width='1.2'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <canvas id="scene-canvas" aria-label="随太阳方位变化的多层电路板场景"></canvas>
+      <div class="scene-vignette" aria-hidden="true"></div>
+      <div class="noise-layer" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <div>
+            <strong>HELIO / BUS</strong>
+            <span>SOLAR ROUTING OBSERVATORY</span>
+          </div>
+        </div>
+        <div class="topbar-center">
+          <span>SITE 31.23°N / 121.47°E</span>
+          <i></i>
+          <span>04-LAYER · 2.4 GHz</span>
+        </div>
+        <div class="live-chip">
+          <span class="live-dot"></span>
+          <span id="render-state">LIVE RENDER</span>
+        </div>
+      </header>
+
+      <main class="stage">
+        <section class="hero" aria-labelledby="page-title">
+          <p class="eyebrow"><span>01</span> SUNLIGHT → MATERIAL → SIGNAL</p>
+          <h1 id="page-title">光在移动<br /><em>路径在呼吸</em></h1>
+          <p class="lede">
+            太阳方位驱动天空、环境光与投影方向。四层线路在这块光伏载板上
+            完成无交叉布线，每个过孔都经过障碍与间距校验。
+          </p>
+          <div class="hero-tags">
+            <span>连续 24H</span>
+            <span>零交叉</span>
+            <span>过孔避障</span>
+          </div>
+        </section>
+
+        <section class="scene-readout" aria-label="场景指针">
+          <div class="compass">
+            <span class="compass-n">N</span>
+            <span class="compass-e">E</span>
+            <span class="compass-s">S</span>
+            <span class="compass-w">W</span>
+            <i id="compass-needle"></i>
+            <b></b>
+          </div>
+          <div>
+            <span class="micro-label">SHADOW VECTOR</span>
+            <strong id="shadow-bearing">090°</strong>
+            <small>阴影与太阳方位相差 180°</small>
+          </div>
+        </section>
+
+        <section class="layer-key" aria-label="层颜色图例">
+          <span class="micro-label">COPPER STACK</span>
+          <div id="layer-legend"></div>
+        </section>
+
+        <aside class="inspector" aria-label="观测数据面板">
+          <div class="inspector-head">
+            <div>
+              <span class="micro-label">OBSERVATION / 0065</span>
+              <h2>日照与布线遥测</h2>
+            </div>
+            <span class="date-chip">2026.11.20</span>
+          </div>
+
+          <div class="inspector-scroll">
+            <section class="panel sun-panel">
+              <div class="panel-head">
+                <span><b>01</b> 太阳状态</span>
+                <span id="phase-chip" class="status-chip">SUNSET</span>
+              </div>
+              <div class="sun-numbers">
+                <div>
+                  <span class="data-label">高度角</span>
+                  <strong><output id="elevation-value">0.0</output><small>°</small></strong>
+                </div>
+                <div>
+                  <span class="data-label">方位角</span>
+                  <strong><output id="azimuth-value">270</output><small>°</small></strong>
+                </div>
+                <div>
+                  <span class="data-label">总照度</span>
+                  <strong><output id="global-lux">742</output><small>lx</small></strong>
+                </div>
+              </div>
+              <div class="meter-row">
+                <span>光照强度</span>
+                <div class="meter"><i id="light-meter"></i></div>
+                <output id="intensity-value">0.6%</output>
+              </div>
+              <div class="metric-grid">
+                <div><span>直射照度</span><b id="direct-lux">36 lx</b></div>
+                <div><span>辐照度</span><b id="irradiance-value">0 W/m²</b></div>
+                <div><span>环境光色</span><b id="ambient-hex">#4B3642</b></div>
+                <div><span>太阳向量</span><b id="sun-vector">−1.000, 0.000, 0.000</b></div>
+              </div>
+            </section>
+
+            <section class="panel palette-panel">
+              <div class="panel-head">
+                <span><b>04</b> 动态天空</span>
+                <span class="quiet-label">sRGB · CONTINUOUS</span>
+              </div>
+              <div class="sky-preview" id="sky-preview">
+                <div class="sky-sun" id="sky-sun"></div>
+                <div class="sky-horizon"></div>
+              </div>
+              <div class="swatch-list">
+                <div><i id="top-swatch"></i><span>天顶</span><code id="top-hex">#2A3A5F</code></div>
+                <div><i id="horizon-swatch"></i><span>地平线</span><code id="horizon-hex">#B35445</code></div>
+                <div><i id="sun-swatch"></i><span>太阳</span><code id="sun-hex">#FF8A51</code></div>
+              </div>
+            </section>
+
+            <section class="panel continuity-panel">
+              <div class="panel-head">
+                <span><b>03</b> 日落连续性</span>
+                <span class="pass-chip" id="sunset-status">PASS</span>
+              </div>
+              <div class="continuity-strip" id="sunset-strip" aria-label="日落时段天空渐变"></div>
+              <div class="check-grid">
+                <div><span>最大相邻色差</span><b><output id="color-delta">6</output> / 255</b></div>
+                <div><span>阴影方位误差</span><b><output id="shadow-error">0.000</output>°</b></div>
+                <div><span>照度相对跳变</span><b><output id="lux-delta">15.2</output>%</b></div>
+                <div><span>午夜接缝色差</span><b><output id="wrap-delta">0</output> / 255</b></div>
+              </div>
+              <p class="panel-note" id="continuity-note">
+                17:00–19:30 按 1 分钟采样；颜色、照度与阴影向量均连续。
+              </p>
+            </section>
+
+            <section class="panel route-panel">
+              <div class="panel-head">
+                <span><b>02</b> 四层线路</span>
+                <span class="pass-chip" id="route-status">PASS</span>
+              </div>
+              <div class="route-summary">
+                <div><strong id="routed-nets">6/6</strong><span>布通网络</span></div>
+                <div><strong id="crossing-count">0</strong><span>同层交叉</span></div>
+                <div><strong id="via-count">6</strong><span>过孔</span></div>
+              </div>
+              <div class="via-table">
+                <div class="via-table-head">
+                  <span>NET</span><span>VIA XY</span><span>LAYER</span><span>STATE</span>
+                </div>
+                <div class="via-table-body" id="via-table-body"></div>
+              </div>
+              <div class="route-foot">
+                <span id="route-proof">交叉下界 0 · 当前 0 · 全局最少</span>
+                <span>避障 <b>6/6</b></span>
+              </div>
+            </section>
+
+            <section class="panel timing-panel">
+              <div class="panel-head">
+                <span><b>05</b> 时间 → 渲染</span>
+                <span class="quiet-label">FIXED STEP</span>
+              </div>
+              <div class="timing-line">
+                <span id="timing-description">6.0 分钟 / 秒 · 60 FPS</span>
+                <code id="timing-example">1 分钟 = 10 秒</code>
+              </div>
+              <div class="timing-bars">
+                <div><span>仿真步长</span><b>1 / 60 s</b></div>
+                <div><span>渲染帧</span><b id="frame-count">000000</b></div>
+                <div><span>推进步数</span><b id="step-count">000000</b></div>
+              </div>
+              <p class="panel-note">
+                每一帧只读取权威仿真时间；不按帧累加光照，窗口卡顿时也不会造成颜色跳变。
+              </p>
+            </section>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="timeline-dock">
+        <div class="transport">
+          <button id="play-button" class="play-button" type="button" aria-label="暂停时间">
+            <span class="pause-icon" aria-hidden="true"></span>
+          </button>
+          <div class="clock-block">
+            <span class="micro-label">SIMULATION CLOCK</span>
+            <strong id="clock-value">17:45</strong>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-head">
+            <span>00:00</span><span>日出 06:00</span><span>正午 12:00</span>
+            <span>日落 18:00</span><span>24:00</span>
+          </div>
+          <div class="timeline-track">
+            <div class="timeline-fill" id="timeline-fill"></div>
+            <input id="time-range" type="range" min="0" max="24" step="0.001" value="17.75" aria-label="仿真时间" />
+            <i class="sun-pin" id="sun-pin"></i>
+          </div>
+        </div>
+        <div class="dock-actions">
+          <div class="preset-group" role="group" aria-label="时间预设">
+            <button type="button" data-hour="5.75">黎明</button>
+            <button type="button" data-hour="12">正午</button>
+            <button type="button" data-hour="17.75">日落</button>
+            <button type="button" data-hour="23">夜间</button>
+          </div>
+          <select id="speed-select" aria-label="时间推进速度">
+            <option value="0.0166666667">1× · 1 分/秒</option>
+            <option value="0.1" selected>6× · 6 分/秒</option>
+            <option value="0.5">30× · 30 分/秒</option>
+            <option value="2">120× · 2 时/秒</option>
+          </select>
+        </div>
+      </footer>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="./src/lighting.js"></script>
+    <script src="./src/routing.js"></script>
+    <script src="./src/time.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
