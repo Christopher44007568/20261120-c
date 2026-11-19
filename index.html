@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="动态 L2 球谐光照探针、邻域传播、连续插值与更新频率基准"
+    />
+    <title>Dynamic SH Probes · 动态球谐探针</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">LIGHTING LAB / L2 SH</p>
+        <h1>动态球谐光照探针</h1>
+        <p class="subtitle">动态光源投影 · 邻域传播 · 连续插值与按需更新</p>
+      </div>
+      <div class="top-actions">
+        <button class="button ghost" id="exportButton" type="button">导出探针 CSV</button>
+        <button class="button" id="resetButton" type="button">重新开始</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-grid">
+        <article class="panel scene-panel">
+          <div class="panel-head">
+            <div>
+              <span class="live-dot"></span>
+              <span class="panel-kicker">实时探针场</span>
+            </div>
+            <span class="pill" id="modePill">按需 50 ms</span>
+          </div>
+          <div class="scene-wrap">
+            <canvas id="sceneCanvas" aria-label="动态 SH 探针光照场景"></canvas>
+            <div class="scene-legend">
+              <span><i class="legend-probe"></i>探针</span>
+              <span><i class="legend-object"></i>动态物体 / 光源</span>
+              <span><i class="legend-boundary"></i>插值单元</span>
+            </div>
+          </div>
+          <div class="transport">
+            <button class="icon-button" id="playButton" type="button" aria-label="暂停">Ⅱ</button>
+            <label class="control grow">
+              <span>更新间隔 <b id="intervalLabel">50 ms</b></span>
+              <input id="intervalInput" type="range" min="0" max="400" step="1" value="50" />
+            </label>
+            <label class="control">
+              <span>移动速度 <b id="speedLabel">1.0×</b></span>
+              <input id="speedInput" type="range" min="20" max="180" step="5" value="100" />
+            </label>
+            <label class="control">
+              <span>显示阻尼 <b id="smoothingLabel">65 ms</b></span>
+              <input id="smoothingInput" type="range" min="0" max="180" step="5" value="65" />
+            </label>
+          </div>
+        </article>
+
+        <aside class="telemetry">
+          <article class="panel controls-panel">
+            <div class="panel-head">
+              <span class="panel-kicker">更新策略</span>
+              <span class="micro">60 Hz SIM</span>
+            </div>
+            <div class="segmented" role="group" aria-label="更新策略">
+              <button type="button" data-mode="ondemand" class="active">按需脏区</button>
+              <button type="button" data-mode="frame">逐帧全量</button>
+            </div>
+            <p class="control-note" id="strategyNote">
+              仅在灯光移动超过阈值且到达更新间隔时重建受影响探针。
+            </p>
+          </article>
+
+          <article class="panel metrics-panel">
+            <div class="panel-head">
+              <span class="panel-kicker">实时耗时</span>
+              <span class="micro" id="fpsLabel">-- FPS</span>
+            </div>
+            <div class="metric-grid">
+              <div class="metric">
+                <span>系数重建</span>
+                <strong id="updateMetric">0.000</strong>
+                <small>ms / frame</small>
+              </div>
+              <div class="metric">
+                <span>探针插值</span>
+                <strong id="interpolationMetric">0.000</strong>
+                <small>ms / frame</small>
+              </div>
+              <div class="metric accent">
+                <span>更新 + 插值</span>
+                <strong id="totalMetric">0.000</strong>
+                <small>ms / frame</small>
+              </div>
+              <div class="metric">
+                <span>p95 总计</span>
+                <strong id="p95Metric">0.000</strong>
+                <small>帧预算 16.67</small>
+              </div>
+            </div>
+            <div class="budget">
+              <span>60 Hz 帧预算占用</span>
+              <div class="budget-track"><i id="budgetBar"></i></div>
+              <b id="budgetText">0.0%</b>
+            </div>
+          </article>
+
+          <article class="panel quality-panel">
+            <div class="panel-head">
+              <span class="panel-kicker">连续性 / 画质</span>
+              <span class="status-pill good" id="continuityBadge">连续</span>
+            </div>
+            <div class="quality-rows">
+              <div><span>边界穿越</span><b id="boundaryCount">0</b></div>
+              <div><span>最大边界跳变</span><b id="boundaryJump">0.0000</b></div>
+              <div><span>平均亮度误差</span><b id="meanError">0.00%</b></div>
+              <div><span>更新次数</span><b id="updateCount">0</b></div>
+            </div>
+          </article>
+
+          <article class="panel selected-panel">
+            <div class="panel-head">
+              <span class="panel-kicker">探针检查器</span>
+              <span class="micro" id="selectedProbeLabel">P--</span>
+            </div>
+            <div class="selected-lum">
+              <span>显示亮度</span>
+              <strong id="selectedLuminance">0.0000</strong>
+              <span class="error-chip" id="selectedError">0.00%</span>
+            </div>
+            <div class="coefficient-grid" id="coefficientGrid"></div>
+            <p class="hint">点击画布中的探针可查看 9 个 SH 系数与 RGB。</p>
+          </article>
+        </aside>
+      </section>
+
+      <section class="analysis-grid">
+        <article class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">颜色连续性</span>
+              <p class="panel-caption">最近 300 帧对象亮度；竖线为系数重建，圆点为跨单元边界。</p>
+            </div>
+            <span class="micro" id="trajectoryTime">T+0.0 s</span>
+          </div>
+          <canvas id="historyCanvas" aria-label="动态物体亮度时间曲线"></canvas>
+        </article>
+
+        <article class="panel benchmark-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">基准对照</span>
+              <p class="panel-caption">32 × 24 探针、4 盏动态灯、600 帧压力测试。</p>
+            </div>
+            <span class="micro" id="benchmarkStatus">加载中</span>
+          </div>
+          <div class="compare-table" id="compareTable"></div>
+          <div class="ratio-row">
+            <span>逐帧 / 按需 系数成本</span>
+            <strong id="rebuildRatio">--×</strong>
+            <span>逐帧 / 按需 总成本</span>
+            <strong id="totalRatio">--×</strong>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker">更新频率权衡</span>
+            <p class="panel-caption">误差以当前场景平均探针亮度归一化；跳变为边界处相邻帧最大通道差。</p>
+          </div>
+          <span class="micro">选择间隔可改变上方实时策略</span>
+        </div>
+        <div class="table-scroll">
+          <table id="frequencyTable">
+            <thead>
+              <tr>
+                <th>间隔</th>
+                <th>更新次数</th>
+                <th>重建 ms</th>
+                <th>插值 ms</th>
+                <th>总计 ms</th>
+                <th>平均误差</th>
+                <th>p95 误差</th>
+                <th>最大误差</th>
+                <th>边界跳变</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="9" class="empty">运行 <code>npm run bench</code> 生成基准数据</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel table-panel probe-panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker">全部探针</span>
+            <p class="panel-caption">显示亮度、参考亮度、归一化亮度误差与 SH 投影误差。</p>
+          </div>
+          <span class="micro" id="probeSummary">--</span>
+        </div>
+        <div class="table-scroll probe-scroll">
+          <table id="probeTable">
+            <thead>
+              <tr>
+                <th>探针</th>
+                <th>X</th>
+                <th>Z</th>
+                <th>显示亮度</th>
+                <th>参考亮度</th>
+                <th>误差</th>
+                <th>投影误差</th>
+                <th>更新龄期</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>L2 SH · 9 coefficients × RGB · four-probe bilinear interpolation</span>
+      <span>CPU measurements use Node.js high-resolution clock</span>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

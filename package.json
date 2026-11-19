@@ -1,0 +1,16 @@
+{
+  "name": "dynamic-sh-probes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dynamic L2 spherical-harmonics light probes with propagation and continuity diagnostics",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "bench": "node src/benchmark.js",
+    "report": "node src/benchmark.js --report"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
