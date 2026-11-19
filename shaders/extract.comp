@@ -1,0 +1,21 @@
+#version 450
+// Reads individual samples of the unresolved multisample attachment for
+// selected pixels, so the host can show exactly which samples were written.
+layout(set = 0, binding = 0) uniform sampler2DMS msImage;
+layout(std430, set = 0, binding = 1) writeonly buffer OutBuf { vec4 vals[]; } outBuf;
+
+layout(push_constant) uniform PC {
+    ivec2 pixels[8];
+    int count;
+    int samples;
+} pc;
+
+layout(local_size_x = 64) in;
+
+void main() {
+    int idx = int(gl_GlobalInvocationID.x);
+    int p = idx / pc.samples;
+    int s = idx - p * pc.samples;
+    if (p >= pc.count) return;
+    outBuf.vals[idx] = texelFetch(msImage, pc.pixels[p], s);
+}
