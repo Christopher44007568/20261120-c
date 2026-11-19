@@ -1,0 +1,6 @@
+numpy>=2.0
+scipy>=1.13
+matplotlib>=3.8
+scikit-image>=0.24
+open3d>=0.18
+libusb-package>=1.0.26; sys_platform == "linux"
