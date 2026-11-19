@@ -1,0 +1,12 @@
+{
+  "name": "dqs-lbs-skinning-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time dual quaternion skinning laboratory with an LBS comparison.",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

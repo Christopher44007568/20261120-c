@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070b10" />
+    <title>DQS / LBS — Real-time Skinning Lab</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%230c1219%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22%2339c6b4%22>±</text></svg>" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">±</span>
+          <span class="brand-copy">
+            <strong>DUAL QUATERNION LAB</strong>
+            <small>实时角色蒙皮 · DQS / LBS</small>
+          </span>
+        </div>
+        <nav class="scene-tabs" id="sceneTabs" aria-label="测试模型">
+          <button class="scene-tab is-active" data-scene="twist">
+            <span class="tab-index">01</span>
+            <span><strong>分节圆柱</strong><small>轴向扭转</small></span>
+          </button>
+          <button class="scene-tab" data-scene="elbow">
+            <span class="tab-index">02</span>
+            <span><strong>肘关节</strong><small>单轴弯曲</small></span>
+          </button>
+        </nav>
+        <div class="runtime-badge">
+          <span class="live-dot"></span>
+          <span><strong>WebGL2</strong><small id="fpsLabel">-- FPS</small></span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="viewport-panel" aria-label="三维蒙皮视口">
+          <canvas id="viewport"></canvas>
+          <div class="viewport-vignette"></div>
+
+          <div class="scene-heading">
+            <span class="eyebrow" id="sceneEyebrow">SCENE 01 · TWIST</span>
+            <h1 id="sceneTitle">分节圆柱</h1>
+            <p id="sceneSubtitle">沿同一骨骼轴扭转，观察中段混合权重区域。</p>
+          </div>
+
+          <div class="view-modes" id="modeTabs" role="group" aria-label="蒙皮算法">
+            <button class="view-mode is-active" data-mode="lbs"><i class="swatch lbs"></i>LBS</button>
+            <button class="view-mode" data-mode="dqs"><i class="swatch dqs"></i>DQS</button>
+            <button class="view-mode" data-mode="error"><i class="swatch heat"></i>误差热图</button>
+          </div>
+
+          <div class="heat-legend" id="heatLegend" hidden>
+            <span>DQS ↔ LBS 顶点距离</span>
+            <div class="heat-ramp"></div>
+            <div class="heat-ticks"><span>0</span><span id="heatMid">0.30</span><span id="heatMaxLabel">0.60</span></div>
+          </div>
+
+          <div class="scene-key" id="sceneKey">
+            <span><i class="line lbs"></i>LBS 轨迹</span>
+            <span><i class="line dqs"></i>DQS 轨迹</span>
+            <span><i class="ring"></i>探针环 z=2.00</span>
+          </div>
+
+          <div class="viewport-footer">
+            <div class="angle-control">
+              <button class="transport" id="playButton" aria-label="播放角度扫描">
+                <span class="play-icon"></span>
+              </button>
+              <div class="angle-slider-wrap">
+                <div class="angle-readout">
+                  <span>关节旋转</span>
+                  <output id="angleOutput">0.0°</output>
+                </div>
+                <input id="angleRange" type="range" min="0" max="180" step="0.1" value="0" />
+                <div class="range-labels"><span>0° 绑定</span><span>90°</span><span>180° 极限</span></div>
+              </div>
+            </div>
+            <button class="sign-toggle" id="signButton" title="切换同一旋转的 ±q 表示">
+              <span class="sign-glyph" id="signGlyph">+q</span>
+              <span><strong>四元数符号</strong><small id="signState">翻转无闪跳</small></span>
+            </button>
+          </div>
+
+          <div class="viewport-note">拖拽旋转 · 滚轮缩放 · 双击复位</div>
+        </section>
+
+        <aside class="inspector">
+          <section class="inspector-intro">
+            <div class="title-row">
+              <span class="eyebrow">LIVE DIAGNOSTICS</span>
+              <span class="status-pill" id="statePill">绑定姿态</span>
+            </div>
+            <p id="inspectorSummary">两条路径共享骨架、绑定姿态与顶点权重。</p>
+          </section>
+
+          <section class="metric-grid">
+            <article class="metric-card">
+              <span class="metric-label"><i class="swatch lbs"></i>LBS 截面积</span>
+              <strong id="lbsArea">100.0%</strong>
+              <small id="lbsAreaNote">中段探针环</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label"><i class="swatch dqs"></i>DQS 截面积</span>
+              <strong id="dqsArea">100.0%</strong>
+              <small id="dqsAreaNote">中段探针环</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">LBS ↔ DQS</span>
+              <strong id="maxError">0.0000</strong>
+              <small>当前最大顶点误差</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">±q 顶点跳变</span>
+              <strong class="good" id="signJump">0.0e+0</strong>
+              <small>翻转前后最大距离</small>
+            </article>
+          </section>
+
+          <section class="chart-card">
+            <div class="card-heading">
+              <div><span class="eyebrow">CROSS SECTION</span><h2>截面积保持率</h2></div>
+              <span class="card-value" id="areaCaption">180° 剖面</span>
+            </div>
+            <canvas id="areaChart" class="chart-canvas"></canvas>
+            <div class="chart-legend">
+              <span><i class="line lbs"></i>LBS</span>
+              <span><i class="line dqs"></i>DQS</span>
+              <span><i class="zone"></i>权重混合区</span>
+            </div>
+          </section>
+
+          <section class="chart-card">
+            <div class="card-heading">
+              <div><span class="eyebrow">VERTEX PATH</span><h2>探针顶点轨迹</h2></div>
+              <span class="card-value" id="trajectoryCaption">X–Y 顶视</span>
+            </div>
+            <canvas id="trajectoryChart" class="chart-canvas"></canvas>
+            <div class="chart-legend">
+              <span><i class="dot lbs"></i>LBS</span>
+              <span><i class="dot dqs"></i>DQS</span>
+              <span><i class="dot current"></i>当前角度</span>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="proof-bar">
+        <div class="proof-heading">
+          <span class="eyebrow">VERIFICATION</span>
+          <strong>运行时证明</strong>
+        </div>
+        <div class="proof-item">
+          <span class="proof-icon ok">✓</span>
+          <span><strong>绑定姿态一致</strong><small id="bindProof">LBS 0.0e+0 · DQS 0.0e+0</small></span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-icon ok">✓</span>
+          <span><strong>跨 ±q 连续</strong><small id="signProof">最大跳变 0.0e+0</small></span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-icon ok">✓</span>
+          <span><strong>零权重孤立点</strong><small id="orphanProof">3 个 · 保持绑定位置</small></span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-icon neutral">i</span>
+          <span><strong>共享输入</strong><small id="sharedProof">2 关节 · 0 个混合顶点</small></span>
+        </div>
+        <div class="deformation-key">
+          <span class="eyebrow">DEFORMATION INTERVALS</span>
+          <div class="interval-row"><b>LBS</b><span id="lbsInterval">z 1.00–3.00</span><em id="lbsIntervalNote">截面收缩</em></div>
+          <div class="interval-row"><b>DQS</b><span id="dqsInterval">z 1.00–3.00</span><em id="dqsIntervalNote">保形旋转</em></div>
+        </div>
+      </footer>
+
+      <div class="error-toast" id="errorToast" hidden></div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
