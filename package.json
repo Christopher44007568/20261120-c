@@ -1,0 +1,10 @@
+{
+  "name": "boids-flock-aniso-fabric",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "verify": "node verify.mjs",
+    "demo": "python3 -m http.server 8000"
+  }
+}
