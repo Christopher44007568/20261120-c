@@ -1,0 +1,11 @@
+{
+  "name": "forma-pbd-paint-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Position-based soft body validation and multilayer automotive paint optics.",
+  "scripts": {
+    "start": "python3 -m http.server 8080 --bind 127.0.0.1",
+    "validate": "node scripts/validate.mjs"
+  }
+}

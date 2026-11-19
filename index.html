@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070a0f" />
+    <title>FORMA / PBD 软体与车漆光学实验台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <div class="app-shell">
+      <aside class="rail" aria-label="主导航">
+        <a class="brand-mark" href="#top" aria-label="FORMA 首页">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M5 7.5 16 2l11 5.5v17L16 30 5 24.5z" />
+            <path d="m5 7.5 11 6 11-6M16 13.5V30" />
+          </svg>
+        </a>
+        <nav class="rail-nav">
+          <a class="rail-link is-active" href="#simulation" aria-label="软体实验">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15.5c2.3-5.2 5-7.8 8-7.8s5.7 2.6 8 7.8c-2.7 3.7-5.3 5.5-8 5.5s-5.3-1.8-8-5.5Z"/><path d="M8 10V4m8 6V4M8 20v2m8-2v2"/></svg>
+            <span>SIM</span>
+          </a>
+          <a class="rail-link" href="#analysis" aria-label="验证分析">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m5 10V4m6 15v-7m5 7V7"/><path d="M2 19h20"/></svg>
+            <span>DATA</span>
+          </a>
+          <a class="rail-link" href="#paint" aria-label="车漆光学">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>PAINT</span>
+          </a>
+        </nav>
+        <div class="rail-meta">
+          <span class="rail-line"></span>
+          <span>R&amp;D<br />2026.11</span>
+        </div>
+      </aside>
+
+      <main id="top">
+        <header class="topbar">
+          <div class="brand-copy">
+            <span class="eyebrow">COMPUTATIONAL MATERIAL LAB</span>
+            <h1>FORMA <span>/</span> 形变与光学</h1>
+          </div>
+          <div class="topbar-meta">
+            <span class="live-chip"><i></i> LIVE SOLVER</span>
+            <span class="version">BUILD 0.9.4</span>
+          </div>
+        </header>
+
+        <section class="intro">
+          <div>
+            <span class="kicker">01 — SOFT BODY KINEMATICS</span>
+            <h2>用约束，<br /><em>塑造真实形变。</em></h2>
+          </div>
+          <p class="intro-copy">
+            位置动力学软体实验台。距离约束维持局部结构，碰撞投影处理穿透，
+            体积校正追踪等容响应。每一次迭代、每一毫米误差，都来自实时求解。
+          </p>
+        </section>
+
+        <section id="simulation" class="sim-section">
+          <article class="panel sim-panel">
+            <div class="panel-head">
+              <div>
+                <span class="panel-index">EXPERIMENT / 01</span>
+                <h3>软体压拉试验</h3>
+              </div>
+              <div class="segmented" role="group" aria-label="形变模式">
+                <button class="seg-btn is-active" data-mode="compress" type="button">挤压</button>
+                <button class="seg-btn" data-mode="stretch" type="button">拉伸</button>
+              </div>
+            </div>
+            <div class="viewport" id="softViewport">
+              <canvas id="softCanvas" aria-label="PBD 软体三维仿真视图"></canvas>
+              <div class="viewport-scan"></div>
+              <div class="viewport-top-left">
+                <span class="hud-label">MODE</span>
+                <strong id="viewportMode">UNIAXIAL / COMPRESS</strong>
+              </div>
+              <div class="viewport-top-right">
+                <span class="hud-stat"><i class="cyan"></i><b id="hudIterations">24</b> ITER</span>
+                <span class="hud-stat"><i class="lime"></i>PBD</span>
+              </div>
+              <div class="axis-widget" aria-hidden="true">
+                <span class="axis-z">Z</span>
+                <span class="axis-y">Y</span>
+                <span class="axis-x">X</span>
+              </div>
+              <div class="viewport-readout">
+                <div><span>STATE</span><b id="hudState">SOLVING</b></div>
+                <div><span>STRAIN</span><b id="hudStrain">−18.0%</b></div>
+                <div><span>RESIDUAL</span><b id="hudResidual">0.000</b></div>
+              </div>
+              <div class="canvas-legend">
+                <span><i class="dot dot-cyan"></i>粒子</span>
+                <span><i class="dot dot-line"></i>距离约束</span>
+                <span><i class="dot dot-coral"></i>碰撞体</span>
+              </div>
+            </div>
+            <div class="sim-strip">
+              <div class="run-controls">
+                <button id="playButton" class="icon-btn play" type="button" aria-label="暂停仿真">
+                  <svg class="pause-icon" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>
+                  <svg class="play-icon" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></svg>
+                </button>
+                <button id="resetButton" class="text-btn" type="button">重置</button>
+              </div>
+              <div class="solver-progress">
+                <div class="progress-label"><span>约束求解</span><span id="stepLabel">STEP 0000</span></div>
+                <div class="progress-track"><i id="progressFill"></i></div>
+              </div>
+              <button id="exportButton" class="outline-btn" type="button">
+                导出验证 JSON
+                <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
+              </button>
+            </div>
+          </article>
+
+          <aside class="control-panel panel">
+            <div class="panel-head compact">
+              <div>
+                <span class="panel-index">CONTROL DECK</span>
+                <h3>求解参数</h3>
+              </div>
+              <span class="status-dot">STABLE</span>
+            </div>
+
+            <div class="metric-cluster">
+              <div class="primary-metric">
+                <span class="metric-label">VOLUME RETENTION</span>
+                <div><strong id="metricVolume">99.94</strong><span>%</span></div>
+                <small id="metricVolumeDelta">ΔV −0.060%</small>
+              </div>
+              <div class="mini-metrics">
+                <div><span>顶点位置误差</span><b id="metricError">0.184 <i>mm</i></b></div>
+                <div><span>约束迭代</span><b id="metricIterations">24 <i>×</i></b></div>
+                <div><span>残余抖动</span><b id="metricJitter">0.0012</b></div>
+                <div><span>收敛判定</span><b class="ok" id="metricConverged">PASS</b></div>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <label for="iterationRange">约束迭代次数</label>
+                <output id="iterationOutput">24</output>
+              </div>
+              <input id="iterationRange" type="range" min="1" max="64" step="1" value="24" />
+              <div class="range-scale"><span>1</span><span>16</span><span>32</span><span>64</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <label for="strainRange">形变幅值</label>
+                <output id="strainOutput">18%</output>
+              </div>
+              <input id="strainRange" type="range" min="5" max="25" step="1" value="18" />
+              <div class="range-scale"><span>5%</span><span>15%</span><span>25%</span></div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <label for="stiffnessRange">约束刚度</label>
+                <output id="stiffnessOutput">0.82</output>
+              </div>
+              <input id="stiffnessRange" type="range" min="40" max="100" step="1" value="82" />
+            </div>
+
+            <label class="toggle-row">
+              <span><b>碰撞探针</b><small>球体侧向压入</small></span>
+              <input id="collisionToggle" type="checkbox" checked />
+              <i class="switch"></i>
+            </label>
+
+            <div class="solver-note">
+              <span>∫</span>
+              <p>距离约束 + 碰撞投影<br /><b>体积校正 0.75</b> · 子步 2</p>
+            </div>
+          </aside>
+        </section>
+
+        <section id="analysis" class="analysis-section">
+          <div class="section-heading">
+            <div>
+              <span class="kicker">02 — CONSTRAINT CONVERGENCE</span>
+              <h2>迭代越多，<em>系统越稳。</em></h2>
+            </div>
+            <div class="section-aside">
+              <span class="verification-badge">
+                <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                3× 重复验证 · PASS
+              </span>
+              <p>挤压与拉伸各执行 3 组独立重复；误差、体积与残余抖动取均值。</p>
+            </div>
+          </div>
+
+          <div class="analysis-grid">
+            <article class="panel chart-panel">
+              <div class="panel-head compact">
+                <div>
+                  <span class="panel-index">VOLUME / ITER</span>
+                  <h3>体积保持</h3>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="cyan"></i>挤压</span>
+                  <span><i class="coral"></i>拉伸</span>
+                </div>
+              </div>
+              <div class="chart-wrap tall"><canvas id="volumeChart"></canvas></div>
+              <div class="chart-foot">
+                <span>等容参考线</span><b>100.00%</b>
+                <span class="chart-foot-note" id="volumeInsight">64 次迭代 → 体积偏差 &lt; 0.05%</span>
+              </div>
+            </article>
+
+            <article class="panel chart-panel">
+              <div class="panel-head compact">
+                <div>
+                  <span class="panel-index">POSITION ERROR / ITER</span>
+                  <h3>顶点位置误差</h3>
+                </div>
+                <span class="unit-tag">mm · RMS</span>
+              </div>
+              <div class="chart-wrap tall"><canvas id="errorChart"></canvas></div>
+              <div class="chart-foot">
+                <span>误差定义</span><b>RMS ‖pᵢ − pᵢ*‖</b>
+                <span class="chart-foot-note" id="errorInsight">收敛斜率 −0.73</span>
+              </div>
+            </article>
+
+            <article class="panel stability-panel">
+              <div class="panel-head compact">
+                <div>
+                  <span class="panel-index">STABILITY ENVELOPE</span>
+                  <h3>稳定性包络</h3>
+                </div>
+                <span class="live-mini"><i></i>REALTIME</span>
+              </div>
+              <div class="stability-hero">
+                <div class="stability-ring" id="stabilityRing">
+                  <div><strong id="stabilityScore">96</strong><span>/100</span></div>
+                  <small>STABILITY INDEX</small>
+                </div>
+                <div class="stability-copy">
+                  <span id="stabilityVerdict">高迭代区稳定</span>
+                  <p id="stabilityDescription">1 → 64 次迭代后，残余抖动预计下降 84%。32 次后进入收敛平台。</p>
+                </div>
+              </div>
+              <div class="stability-bars" id="stabilityBars"></div>
+              <div class="stability-scale"><span>1</span><span>4</span><span>8</span><span>16</span><span>32</span><span>64</span></div>
+            </article>
+
+            <article class="panel table-panel">
+              <div class="panel-head compact">
+                <div>
+                  <span class="panel-index">VALIDATION MATRIX</span>
+                  <h3>挤压 / 拉伸验证矩阵</h3>
+                </div>
+                <span class="run-count">18% STRAIN · 14 CASES · 3 REPEATS</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>迭代</th>
+                      <th>挤压体积</th>
+                      <th>拉伸体积</th>
+                      <th>位置误差</th>
+                      <th>抖动 ↓</th>
+                      <th>结论</th>
+                    </tr>
+                  </thead>
+                  <tbody id="validationRows"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+
+          <div class="insight-strip">
+            <span class="insight-index">READOUT</span>
+            <p>
+              约束迭代增加会持续降低投影残差；<b>1 → 2 次</b>提升最显著，
+              <b>4 次</b>后进入稳定区，<b>32 次</b>后体积与抖动进入平台。
+              过低迭代会让压板角点产生穿透回弹，形成可见的高频振荡。
+            </p>
+            <div class="formula">
+              <span>p<sub>i</sub><sup>t+1</sup></span>
+              <span>=</span>
+              <span>p<sub>i</sub><sup>t</sup> + λ Σ w<sub>ij</sub> ∇C<sub>ij</sub></span>
+            </div>
+          </div>
+        </section>
+
+        <section id="paint" class="paint-section">
+          <div class="section-heading paint-heading">
+            <div>
+              <span class="kicker lime-text">03 — MULTILAYER PAINT OPTICS</span>
+              <h2>光进入漆面，<br /><em>能量从不消失。</em></h2>
+            </div>
+            <div class="section-aside">
+              <span class="verification-badge lime">
+                <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>
+                R + T + A = 1 · VERIFIED
+              </span>
+              <p>清漆 / 金属底色 / 底漆 / 基材四层非相干能量传输。逐波长核算反射、透射与吸收。</p>
+            </div>
+          </div>
+
+          <div class="paint-grid">
+            <article class="paint-visual panel">
+              <div class="panel-head compact">
+                <div>
+                  <span class="panel-index">LAYER CROSS-SECTION</span>
+                  <h3>多层反射路径</h3>
+                </div>
+                <div class="paint-presets" role="group" aria-label="车漆颜色">
+                  <button class="preset is-active" data-preset="cobalt" type="button" aria-label="深钴蓝"><i style="--swatch:#176cff"></i></button>
+                  <button class="preset" data-preset="ember" type="button" aria-label="熔岩橙"><i style="--swatch:#ff5a2c"></i></button>
+                  <button class="preset" data-preset="silver" type="button" aria-label="钛银"><i style="--swatch:#d6e4ec"></i></button>
+                </div>
+              </div>
+              <div class="paint-canvas-wrap">
+                <canvas id="paintCanvas" aria-label="车漆多层反射截面"></canvas>
+                <div class="paint-badge">
+                  <span>ENERGY AUDIT</span>
+                  <b id="energyAudit">PASS</b>
+                  <small id="energyResidual">MAX ERROR 2.2e−16</small>
+                </div>
+                <div class="paint-color-readout">
+                  <span class="swatch-orb" id="paintSwatch"></span>
+                  <div><small>SIMULATED FINISH</small><b id="paintName">Cobalt Flux</b></div>
+                </div>
+              </div>
+              <div class="layer-labels">
+                <button type="button"><i style="--layer:#c8f7ff"></i><span>清漆</span><b>45 µm</b></button>
+                <button type="button"><i style="--layer:#176cff"></i><span>金属底色</span><b>18 µm</b></button>
+                <button type="button"><i style="--layer:#66717c"></i><span>底漆</span><b>25 µm</b></button>
+                <button type="button"><i style="--layer:#1d252d"></i><span>基材</span><b>—</b></button>
+              </div>
+            </article>
+
+            <div class="paint-data">
+              <article class="panel paint-metrics-panel">
+                <div class="panel-head compact">
+                  <div>
+                    <span class="panel-index">TOTAL ENERGY BALANCE</span>
+                    <h3>能量账本</h3>
+                  </div>
+                  <span class="angle-readout" id="angleReadout">35°</span>
+                </div>
+                <div class="energy-metrics">
+                  <div><span><i class="dot dot-cyan"></i>总反射 R</span><b id="reflectEnergy">28.6%</b></div>
+                  <div><span><i class="dot dot-lime"></i>总透射 T</span><b id="transmitEnergy">0.0%</b></div>
+                  <div><span><i class="dot dot-coral"></i>吸收 A</span><b id="absorbEnergy">71.4%</b></div>
+                  <div class="energy-total"><span>Σ E</span><b id="totalEnergy">100.000%</b></div>
+                </div>
+                <div class="control-group paint-control">
+                  <div class="control-label">
+                    <label for="angleRange">观察角</label>
+                    <output id="angleOutput">35°</output>
+                  </div>
+                  <input id="angleRange" type="range" min="0" max="75" step="1" value="35" />
+                  <div class="range-scale"><span>0°</span><span>35°</span><span>75°</span></div>
+                </div>
+              </article>
+
+              <article class="panel paint-chart-panel">
+                <div class="panel-head compact">
+                  <div>
+                    <span class="panel-index">SPECTRAL ENERGY / λ</span>
+                    <h3>能量谱</h3>
+                  </div>
+                  <div class="chart-legend">
+                    <span><i class="cyan"></i>R</span>
+                    <span><i class="lime"></i>T</span>
+                    <span><i class="coral"></i>A</span>
+                  </div>
+                </div>
+                <div class="chart-wrap spectrum"><canvas id="spectrumChart"></canvas></div>
+                <div class="spectrum-scale"><span>380</span><span>480</span><span>580</span><span>680</span><span>780 nm</span></div>
+              </article>
+
+              <article class="panel paint-chart-panel color-panel">
+                <div class="panel-head compact">
+                  <div>
+                    <span class="panel-index">COLOR RESPONSE / θ</span>
+                    <h3>视角颜色曲线</h3>
+                  </div>
+                  <span class="unit-tag">0–75°</span>
+                </div>
+                <div class="chart-wrap color-chart"><canvas id="colorChart"></canvas></div>
+                <div class="color-strip" id="colorStrip"></div>
+              </article>
+            </div>
+          </div>
+
+          <div class="paint-insight">
+            <div class="energy-equation">
+              <span>R(λ)</span><i>+</i><span>T(λ)</span><i>+</i><span>A(λ)</span><i>=</i><b>1</b>
+            </div>
+            <p>
+              清漆界面反射与金属层多次回反射均计入 R，未反射能量按 Beer–Lambert
+              定律分配至 T 与 A。全波段最大能量残差 <b id="energyResidualInline">2.2e−16</b>，
+              满足能量守恒。
+            </p>
+            <span class="audit-stamp">CONSERVED</span>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <div><span class="brand-small">FORMA</span><span>Computational material studies</span></div>
+          <div><span>PBD SOLVER · SPECTRAL OPTICS</span><span>© 2026</span></div>
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
