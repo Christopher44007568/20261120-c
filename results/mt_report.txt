@@ -1,0 +1,138 @@
+=== sphere r=0.75 (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 15840   MC triangles: 5240
+[marching-tetrahedra] 
+  V=7922 E=23760 F=15840 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=7922 chi=2 genus=0.0
+[marching-cubes] 
+  V=2622 E=7860 F=5240 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=2622 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== two spheres (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 9216   MC triangles: 3120
+[marching-tetrahedra] 
+  V=4612 E=13824 F=9216 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=2306 chi=2 genus=0.0
+  comp1: verts=2306 chi=2 genus=0.0
+[marching-cubes] 
+  V=1564 E=4680 F=3120 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=782 chi=2 genus=0.0
+  comp1: verts=782 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== thin slab wall, thickness=0.1250 (2.0h) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 8824   MC triangles: 2296
+[marching-tetrahedra] 
+  V=4414 E=13236 F=8824 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=4414 chi=2 genus=0.0
+[marching-cubes] 
+  V=1150 E=3444 F=2296 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=1150 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== thin slab wall, thickness=0.0938 (1.5h) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 8824   MC triangles: 2296
+[marching-tetrahedra] 
+  V=4414 E=13236 F=8824 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=4414 chi=2 genus=0.0
+[marching-cubes] 
+  V=1150 E=3444 F=2296 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=1150 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== thin slab wall, thickness=0.0625 (1.0h) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 8824   MC triangles: 2296
+[marching-tetrahedra] 
+  V=4414 E=13236 F=8824 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=4414 chi=2 genus=0.0
+[marching-cubes] 
+  V=1150 E=3444 F=2296 chi=2 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=1150 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== thin spherical shell, thickness=0.0938 (1.5h) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 28224   MC triangles: 9424
+[marching-tetrahedra] 
+  V=14076 E=42336 F=28224 chi=-36 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=14076 chi=-36 genus=19.0
+[marching-cubes] 
+  V=4716 E=14136 F=9424 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=2622 chi=2 genus=0.0
+  comp1: verts=2094 chi=2 genus=0.0
+  topology consistent (chi & components match): False
+
+=== thin spherical shell, thickness=0.1250 (2.0h) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 28560   MC triangles: 9664
+[marching-tetrahedra] 
+  V=14284 E=42840 F=28560 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=8378 chi=2 genus=0.0
+  comp1: verts=5906 chi=2 genus=0.0
+[marching-cubes] 
+  V=4836 E=14496 F=9664 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=2838 chi=2 genus=0.0
+  comp1: verts=1998 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== thin spherical shell on fine grid, thickness=0.0938 (grid 65^3, h=0.0312) ===
+  tetrahedra processed: 1572864 (6 per cube x 262144 cubes)
+  MT triangles: 113496   MC triangles: 37888
+[marching-tetrahedra] 
+  V=56752 E=170244 F=113496 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=32186 chi=2 genus=0.0
+  comp1: verts=24566 chi=2 genus=0.0
+[marching-cubes] 
+  V=18948 E=56832 F=37888 chi=4 components=2
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=10734 chi=2 genus=0.0
+  comp1: verts=8214 chi=2 genus=0.0
+  topology consistent (chi & components match): True
+
+=== checkerboard (ambiguity stress) (grid 33^3, h=0.0625) ===
+  tetrahedra processed: 196608 (6 per cube x 32768 cubes)
+  MT triangles: 292680   MC triangles: 97560
+[marching-tetrahedra] 
+  V=102522 E=439020 F=292680 chi=-43818 components=1
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=102522 chi=-43818 genus=21910.0
+[marching-cubes] 
+  V=73170 E=146340 F=97560 chi=24390 components=12195
+  boundary_edges=0 nonmanifold_edges=0 misoriented_edges=0 watertight=True
+  comp0: verts=6 chi=2 genus=0.0
+  comp1: verts=6 chi=2 genus=0.0
+  comp2: verts=6 chi=2 genus=0.0
+  comp3: verts=6 chi=2 genus=0.0
+  topology consistent (chi & components match): False
+
+=== SUMMARY ===
+  sphere                   MT watertight=True MC watertight=True chi(MT)=2 chi(MC)=2
+  two_spheres              MT watertight=True MC watertight=True chi(MT)=4 chi(MC)=4
+  thin_slab_t=2.0h         MT watertight=True MC watertight=True chi(MT)=2 chi(MC)=2
+  thin_slab_t=1.5h         MT watertight=True MC watertight=True chi(MT)=2 chi(MC)=2
+  thin_slab_t=1.0h         MT watertight=True MC watertight=True chi(MT)=2 chi(MC)=2
+  thin_shell_t=1.5h        MT watertight=True MC watertight=True chi(MT)=-36 chi(MC)=4
+  thin_shell_t=2.0h        MT watertight=True MC watertight=True chi(MT)=4 chi(MC)=4
+  thin_shell_fine          MT watertight=True MC watertight=True chi(MT)=4 chi(MC)=4
+  checkerboard             MT watertight=True MC watertight=True chi(MT)=-43818 chi(MC)=24390
+  thin-wall no-hole check (MT): PASS
