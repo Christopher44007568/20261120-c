@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Perlin、Worley 与 Simplex 程序化噪声的 WebGL2 形态、频谱、各向异性和性能对照实验。"
+    />
+    <title>噪声形态实验室 · Noise Field Lab</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <main class="page-shell">
+      <header class="site-header">
+        <div class="brand-block">
+          <p class="eyebrow"><span class="signal-dot"></span> PROCEDURAL FIELD STUDY · 03</p>
+          <h1>噪声形态<br /><em>实验室</em></h1>
+          <p class="lede">
+            Perlin / Worley / Simplex 在同一参数下，生成云、石纹与扰动。
+            用分形叠加与域扭曲寻找细节，再用频谱验证它没有变成噪点。
+          </p>
+        </div>
+        <aside class="header-readout" aria-label="实验元数据">
+          <div class="readout-row"><span>RENDERER</span><strong>WEBGL2 / GLSL ES 3.0</strong></div>
+          <div class="readout-row"><span>FIELD</span><strong id="field-readout">512 × 512 · 5 OCT</strong></div>
+          <div class="readout-row"><span>BENCHMARK</span><strong>WARPED / UNWARPED</strong></div>
+          <p class="status-line" id="render-status" role="status">正在初始化 GPU 上下文…</p>
+        </aside>
+      </header>
+
+      <section class="control-deck" aria-label="噪声参数">
+        <div class="warp-control">
+          <span class="control-kicker">DOMAIN WARP</span>
+          <button class="warp-switch" id="warp-toggle" type="button" aria-pressed="true">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+            <span class="switch-copy"><strong>域扭曲</strong><small id="warp-state-label">开启 · 两轴偏移</small></span>
+          </button>
+        </div>
+        <div class="slider-grid">
+          <label class="slider-control">
+            <span><b>OCTAVES</b><output id="octaves-value">5</output></span>
+            <input id="octaves" type="range" min="3" max="7" step="1" value="5" />
+          </label>
+          <label class="slider-control">
+            <span><b>SCALE</b><output id="scale-value">4.2</output></span>
+            <input id="scale" type="range" min="2" max="8" step="0.1" value="4.2" />
+          </label>
+          <label class="slider-control">
+            <span><b>WARP</b><output id="warp-value">0.34</output></span>
+            <input id="warp" type="range" min="0" max="1" step="0.01" value="0.34" />
+          </label>
+          <label class="slider-control">
+            <span><b>GAIN</b><output id="gain-value">0.52</output></span>
+            <input id="gain" type="range" min="0.3" max="0.72" step="0.01" value="0.52" />
+          </label>
+        </div>
+        <div class="deck-actions">
+          <button class="icon-button" id="seed-button" type="button" title="使用新随机种子">
+            <span class="button-icon">↻</span> NEW SEED
+          </button>
+          <button class="icon-button" id="snapshot-button" type="button" title="下载九宫格 PNG">
+            <span class="button-icon">◎</span> SNAPSHOT
+          </button>
+          <button class="icon-button" id="export-button" type="button" title="导出当前实验报告">
+            <span class="button-icon">↓</span> REPORT
+          </button>
+        </div>
+      </section>
+
+      <section class="matrix-section" aria-labelledby="matrix-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">01 / VISUAL MATRIX</p>
+            <h2 id="matrix-title">同一坐标，三种秩序</h2>
+          </div>
+          <p class="section-note">
+            每格共享坐标、八度、增益与种子。唯一的差异是噪声基元。
+            <span id="warp-note">域扭曲当前开启。</span>
+          </p>
+        </div>
+
+        <div class="matrix-layout">
+          <div class="matrix-corner" aria-hidden="true">MAT / NOISE</div>
+          <div class="column-labels" aria-hidden="true">
+            <span><b>01</b> PERLIN</span>
+            <span><b>02</b> WORLEY</span>
+            <span><b>03</b> SIMPLEX</span>
+          </div>
+          <div class="row-labels" aria-hidden="true">
+            <span><b>01</b><em>云</em><small>CLOUD</small></span>
+            <span><b>02</b><em>石纹</em><small>STONE</small></span>
+            <span><b>03</b><em>扰动</em><small>TURBULENCE</small></span>
+          </div>
+          <div class="matrix-frame" id="matrix-frame">
+            <canvas id="noise-canvas" aria-label="Perlin、Worley、Simplex 在云、石纹、扰动上的九宫格对比"></canvas>
+            <div class="cell-tags" aria-hidden="true">
+              <span>P / CLOUD</span><span>W / CLOUD</span><span>S / CLOUD</span>
+              <span>P / STONE</span><span>W / STONE</span><span>S / STONE</span>
+              <span>P / TURB</span><span>W / TURB</span><span>S / TURB</span>
+            </div>
+            <div class="matrix-scanline" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="matrix-footer">
+          <p><span class="legend-swatch"></span> <span id="matrix-settings">5 OCT · GAIN 0.52</span> · SEED <span id="seed-readout">0x2A6F</span></p>
+          <p id="gpu-label">同步渲染 · 生成耗时以 512² 全屏计算</p>
+          <p class="footer-mark">N = 3 × 3</p>
+        </div>
+      </section>
+
+      <section class="analysis-section" aria-labelledby="analysis-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">02 / SPECTRAL EVIDENCE</p>
+            <h2 id="analysis-title">细节不是噪点</h2>
+          </div>
+          <p class="section-note">
+            径向平均功率谱、结构张量各向异性与同步 GPU 计时，检查域扭曲带来的细节是否仍在自然频带内。
+          </p>
+        </div>
+
+        <div class="analysis-grid">
+          <article class="panel spectrum-panel">
+            <header class="panel-header">
+              <div>
+                <p class="panel-kicker">RADIAL POWER SPECTRUM</p>
+                <h3>频率分布</h3>
+              </div>
+              <div class="panel-legend" aria-label="频谱图例">
+                <span><i class="line-key solid"></i> 域扭曲</span>
+                <span><i class="line-key dashed"></i> 无扭曲</span>
+              </div>
+            </header>
+            <canvas id="spectrum-chart" aria-label="三种噪声在域扭曲前后的径向平均功率谱"></canvas>
+            <div class="chart-axis-note"><span>0.004 cyc/px</span><span>频率 · 对数坐标</span><span>0.5 cyc/px</span></div>
+            <p class="panel-footnote" id="spectrum-note">正在从 GPU 读回 256² 标量场…</p>
+          </article>
+
+          <article class="panel timing-panel">
+            <header class="panel-header">
+              <div>
+                <p class="panel-kicker">SYNCHRONIZED GPU PROBE</p>
+                <h3>生成耗时</h3>
+              </div>
+              <span class="method-badge" id="timing-method">GPU</span>
+            </header>
+            <div class="timing-bars" id="timing-bars" aria-label="三种噪声生成耗时条形图"></div>
+            <div class="timing-table" role="table" aria-label="噪声生成耗时对比">
+              <div class="table-row table-head" role="row">
+                <span role="columnheader">NOISE</span>
+                <span role="columnheader">WARP ON</span>
+                <span role="columnheader">WARP OFF</span>
+                <span role="columnheader">COST</span>
+              </div>
+              <div class="table-row" role="row"><span>Perlin</span><b id="time-perlin-on">—</b><span id="time-perlin-off">—</span><span id="cost-perlin">—</span></div>
+              <div class="table-row" role="row"><span>Worley</span><b id="time-worley-on">—</b><span id="time-worley-off">—</span><span id="cost-worley">—</span></div>
+              <div class="table-row" role="row"><span>Simplex</span><b id="time-simplex-on">—</b><span id="time-simplex-off">—</span><span id="cost-simplex">—</span></div>
+            </div>
+            <p class="panel-footnote" id="timing-note">
+              512 × 512 px · 5 octaves · 4 次 GPU 计时查询中位数。耗时包含全屏着色器的像素生成，不含界面合成。
+            </p>
+          </article>
+
+          <article class="panel anisotropy-panel">
+            <header class="panel-header">
+              <div>
+                <p class="panel-kicker">STRUCTURE TENSOR</p>
+                <h3>方向性</h3>
+              </div>
+              <p class="panel-caption">梯度能量角分布</p>
+            </header>
+            <div class="anisotropy-plots" id="anisotropy-plots"></div>
+          </article>
+
+          <article class="panel validation-panel">
+            <header class="panel-header">
+              <div>
+                <p class="panel-kicker">WARP / DETAIL AUDIT</p>
+                <h3>域扭曲审计</h3>
+              </div>
+              <span class="verdict-pill" id="audit-verdict">分析中</span>
+            </header>
+            <div class="audit-grid">
+              <div class="audit-stat">
+                <span>梯度细节增益</span>
+                <strong id="detail-gain">—</strong>
+                <small>域扭曲 / 原始梯度 RMS</small>
+              </div>
+              <div class="audit-stat">
+                <span>高频尾能量比</span>
+                <strong id="hf-ratio">—</strong>
+                <small>f &gt; 0.22 cyc/px 的能量比</small>
+              </div>
+              <div class="audit-stat">
+                <span>频谱异常度</span>
+                <strong id="artifact-score">—</strong>
+                <small>高频峰 / 局部趋势，越接近 1 越平滑</small>
+              </div>
+            </div>
+            <div class="audit-detail" id="audit-detail">
+              <div class="audit-row"><span>PERLIN</span><i class="audit-bar"><b></b></i><em>等待数据</em></div>
+              <div class="audit-row"><span>WORLEY</span><i class="audit-bar"><b></b></i><em>等待数据</em></div>
+              <div class="audit-row"><span>SIMPLEX</span><i class="audit-bar"><b></b></i><em>等待数据</em></div>
+            </div>
+            <p class="panel-footnote">
+              判定条件：细节增益 &gt; 0，且高频尾没有孤立尖峰。域扭曲场本身以较低频率采样，因此不应在 Nyquist 附近产生新增硬边。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="conclusion-section" aria-labelledby="conclusion-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">03 / FIELD NOTES</p>
+            <h2 id="conclusion-title">形态读法</h2>
+          </div>
+          <p class="section-note">视觉形态为人工目视检查；频谱、方向性与耗时均由当前参数实时计算。</p>
+        </div>
+        <div class="conclusion-grid">
+          <article class="conclusion-card accent-coral">
+            <span class="card-number">A</span>
+            <h3>Perlin · 柔和连续性</h3>
+            <p>梯度插值保留连续方向场。云团边缘圆润，石纹形成流动、拉伸的矿脉，扰动呈层叠剪切而非硬边。</p>
+            <p class="card-metric" id="perlin-note">等待分析</p>
+          </article>
+          <article class="conclusion-card accent-lilac">
+            <span class="card-number">B</span>
+            <h3>Worley · 细胞与边界</h3>
+            <p>特征点距离场带来团块、孔隙和清晰边界。云层更像团簇，石纹出现碎裂与晶粒，扰动保留胞状骨架。</p>
+            <p class="card-metric" id="worley-note">等待分析</p>
+          </article>
+          <article class="conclusion-card accent-mint">
+            <span class="card-number">C</span>
+            <h3>Simplex · 三角各向同性</h3>
+            <p>单纯形剖分减少方向偏差。云与扰动有更均匀的细碎层次，石纹在低频轮廓上叠加均匀颗粒。</p>
+            <p class="card-metric" id="simplex-note">等待分析</p>
+          </article>
+        </div>
+      </section>
+
+      <details class="shader-drawer">
+        <summary>
+          <span><b>GLSL</b> 着色器核心</span>
+          <span class="summary-hint">PERLIN · WORLEY · SIMPLEX · WARP</span>
+        </summary>
+        <div class="shader-body">
+          <p>页面使用内联 WebGL2 片元着色器；下面的代码与实时渲染使用同一份源文本。</p>
+          <pre id="shader-code" tabindex="0"><code>正在载入着色器…</code></pre>
+        </div>
+      </details>
+
+      <footer class="site-footer">
+        <span>NOISE FIELD LAB / 2026</span>
+        <span>PERLIN · WORLEY · SIMPLEX</span>
+        <span id="footer-status">LOCAL GPU SESSION</span>
+      </footer>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
