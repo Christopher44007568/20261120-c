@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>Field Type Lab · MSDF 字形诊断台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2316282a'/%3E%3Cpath d='M7 25V8h5v17zm8 0V8h5v17zm8 0V15h5v10z' fill='%23f2eee1'/%3E%3Cpath d='M23 15h5v10h-5z' fill='%23e85c2f'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Field Type Lab">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="brand-copy">
+            <strong>FIELD TYPE LAB</strong>
+            <small>multi-channel glyph diagnostics</small>
+          </span>
+        </a>
+
+        <div class="topbar-meta">
+          <span class="context-chip">地图标注 / WebGL2</span>
+          <span class="status-dot" id="webglStatus"><i></i> 初始化中</span>
+          <label class="button button-light file-button" for="fontFile">
+            导入本地字体
+            <input id="fontFile" type="file" accept=".ttf,.otf,.woff" />
+          </label>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="panel controls" aria-label="轮廓与采样控制">
+          <div class="panel-heading">
+            <span class="eyebrow">01 / SPECIMEN</span>
+            <h2>轮廓库</h2>
+          </div>
+
+          <div class="glyph-grid" id="glyphGrid" aria-label="内置测试轮廓"></div>
+
+          <div class="source-note" id="sourceNote">
+            <span class="source-icon">⌁</span>
+            <div>
+              <strong>内置可复用轮廓</strong>
+              <p>立方贝塞尔与折线混合，含刻意损坏样本。</p>
+            </div>
+          </div>
+
+          <div class="imported-tools" id="importedTools" hidden>
+            <label class="field-label" for="glyphChars">字体字符</label>
+            <div class="inline-field">
+              <input id="glyphChars" value="A8K" maxlength="16" spellcheck="false" />
+              <button class="button button-dark" id="applyFontGlyphs">生成</button>
+            </div>
+            <p class="hint" id="fontHint">支持 TTF / OTF / WOFF 轮廓。</p>
+          </div>
+
+          <div class="control-section">
+            <div class="control-title">
+              <span>距离场生成</span>
+              <span class="value-tag" id="textureSizeTag">128²</span>
+            </div>
+            <label class="field-label" for="textureSize">纹理精度</label>
+            <select id="textureSize">
+              <option value="64">64 × 64 · 快速</option>
+              <option value="96">96 × 96</option>
+              <option value="128" selected>128 × 128 · 推荐</option>
+              <option value="192">192 × 192</option>
+              <option value="256">256 × 256 · 精细</option>
+            </select>
+
+            <div class="range-heading">
+              <label class="field-label" for="cornerAngle">尖角分组阈值</label>
+              <output id="cornerAngleValue">42°</output>
+            </div>
+            <input id="cornerAngle" type="range" min="15" max="80" step="1" value="42" />
+            <p class="hint">转角大于阈值的边在距离场中拆成独立通道组。</p>
+          </div>
+
+          <div class="control-section">
+            <div class="control-title">
+              <span>采样条件</span>
+              <span class="value-tag" id="sampleTag">48 px</span>
+            </div>
+            <div class="range-heading">
+              <label class="field-label" for="testSize">标签字号</label>
+              <output id="testSizeValue">48 px</output>
+            </div>
+            <input id="testSize" type="range" min="12" max="96" step="2" value="48" />
+
+            <div class="shift-controls">
+              <div>
+                <div class="range-heading">
+                  <label class="field-label" for="shiftX">亚像素 X</label>
+                  <output id="shiftXValue">+0.00 px</output>
+                </div>
+                <input id="shiftX" type="range" min="-0.5" max="0.5" step="0.01" value="0" />
+              </div>
+              <div>
+                <div class="range-heading">
+                  <label class="field-label" for="shiftY">亚像素 Y</label>
+                  <output id="shiftYValue">+0.00 px</output>
+                </div>
+                <input id="shiftY" type="range" min="-0.5" max="0.5" step="0.01" value="0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="control-section toggle-list">
+            <label class="switch-row">
+              <span><strong>像素网格</strong><small>显示测试字号下的采样格</small></span>
+              <input id="showGrid" type="checkbox" checked />
+              <i aria-hidden="true"></i>
+            </label>
+            <label class="switch-row">
+              <span><strong>结构标记</strong><small>角点、孔洞与故障位置</small></span>
+              <input id="showAnatomy" type="checkbox" checked />
+              <i aria-hidden="true"></i>
+            </label>
+          </div>
+        </aside>
+
+        <section class="studio" aria-label="字形诊断视图">
+          <div class="specimen-heading">
+            <div>
+              <span class="eyebrow">02 / INSPECT</span>
+              <div class="title-line">
+                <h1 id="glyphTitle">A</h1>
+                <span class="glyph-class" id="glyphClass">锐角 / 负空间</span>
+              </div>
+            </div>
+            <div class="specimen-stats">
+              <span><b id="contourCount">0</b> 轮廓</span>
+              <span><b id="segmentCount">0</b> 曲线段</span>
+              <span><b id="cornerCount">0</b> 尖角</span>
+              <span><b id="groupCount">0</b> 通道组</span>
+            </div>
+          </div>
+
+          <div class="view-tabs" role="tablist" aria-label="诊断视图">
+            <button class="view-tab is-active" data-view="msdf" role="tab" aria-selected="true">
+              <i class="swatch swatch-rgb"></i>多通道结果
+            </button>
+            <button class="view-tab" data-view="sdf" role="tab" aria-selected="false">
+              <i class="swatch swatch-sdf"></i>单通道距离场
+            </button>
+            <button class="view-tab" data-view="reference" role="tab" aria-selected="false">
+              <i class="swatch swatch-ref"></i>轮廓参考
+            </button>
+            <button class="view-tab" data-view="error" role="tab" aria-selected="false">
+              <i class="swatch swatch-error"></i>误差叠加
+            </button>
+          </div>
+
+          <div class="stage" id="stage">
+            <canvas id="glCanvas" aria-label="WebGL2 MSDF 渲染结果"></canvas>
+            <canvas id="referenceCanvas" aria-label="高分辨率轮廓参考" hidden></canvas>
+            <canvas id="overlayCanvas" aria-label="诊断叠加层"></canvas>
+            <div class="stage-label">
+              <span id="viewLabel">MSDF · 覆盖率</span>
+              <small id="derivativeLabel">屏幕导数重建</small>
+            </div>
+            <div class="stage-scale">
+              <span id="stageZoom">8.0×</span>
+              <small>测试像素</small>
+            </div>
+            <div class="view-options">
+              <label><input id="rawField" type="checkbox" /> 原始距离场</label>
+              <label><input id="channelTint" type="checkbox" checked /> 通道染色</label>
+            </div>
+            <div class="stage-axis axis-x" aria-hidden="true"></div>
+            <div class="stage-axis axis-y" aria-hidden="true"></div>
+            <div class="stage-empty" id="stageEmpty" hidden>
+              <strong>尚无轮廓</strong>
+              <span>导入字体并输入字符。</span>
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <article class="metric">
+              <span>边界偏差</span>
+              <strong id="biasMetric">—</strong>
+              <small>正值为外扩 / 负值为内缩</small>
+            </article>
+            <article class="metric">
+              <span>断笔像素</span>
+              <strong id="brokenMetric">—</strong>
+              <small>参考实心区覆盖率 &lt; 35%</small>
+            </article>
+            <article class="metric">
+              <span>边界错分</span>
+              <strong id="boundaryMetric">—</strong>
+              <small id="boundaryMetricNote">平均边界距离</small>
+            </article>
+            <article class="metric">
+              <span>轮廓状态</span>
+              <strong id="contourMetric">—</strong>
+              <small id="contourMetricNote">拓扑与闭合检查</small>
+            </article>
+          </div>
+
+          <div class="run-strip">
+            <div>
+              <span class="run-kicker">CURRENT SAMPLE</span>
+              <p id="sampleDescription">48 px · 0×0 纹理 / MSDF 三通道</p>
+            </div>
+            <button class="button button-accent" id="evaluateCurrent">评估当前采样</button>
+          </div>
+        </section>
+
+        <aside class="panel diagnostics" aria-label="扫描与误差诊断">
+          <div class="panel-heading">
+            <span class="eyebrow">03 / SWEEP</span>
+            <h2>缩放扫描</h2>
+          </div>
+
+          <div class="sweep-intro">
+            <p>在 4 档字号 × 4 个亚像素位置下重建覆盖率，与高分辨率 Canvas 轮廓比较。</p>
+            <div class="sweep-scales">
+              <span>14</span><span>28</span><span>56</span><span>96 px</span>
+            </div>
+          </div>
+
+          <button class="button button-dark button-wide" id="runSweep">运行 16 组扫描</button>
+          <div class="progress-track" aria-hidden="true"><i id="sweepProgress"></i></div>
+
+          <div class="matrix-wrap">
+            <table class="matrix" aria-label="边界偏差与断笔像素扫描矩阵">
+              <thead>
+                <tr>
+                  <th>字号</th>
+                  <th>0</th>
+                  <th>.25</th>
+                  <th>.50</th>
+                  <th>.75</th>
+                </tr>
+              </thead>
+              <tbody id="sweepBody">
+                <tr><td>14</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td>28</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td>56</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td>96</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+            <div class="matrix-legend">
+              <span><i class="matrix-key key-good"></i>稳定</span>
+              <span><i class="matrix-key key-warn"></i>可见偏差</span>
+              <span><i class="matrix-key key-bad"></i>断笔</span>
+            </div>
+          </div>
+
+          <button class="text-button" id="exportCsv" disabled>导出诊断 CSV ↗</button>
+
+          <div class="diagnosis-block">
+            <div class="panel-heading compact">
+              <span class="eyebrow">04 / READOUT</span>
+              <h2>误差判读</h2>
+            </div>
+
+            <article class="diagnosis-card" id="contourDiagnosis">
+              <header>
+                <i class="diag-dot contour"></i>
+                <strong>轮廓错误</strong>
+                <span id="contourVerdict">检查中</span>
+              </header>
+              <p id="contourDetail">检查开放轮廓、重复顶点与自交。</p>
+              <ul>
+                <li>所有字号下同样出现</li>
+                <li>高分辨率参考中已可见破口</li>
+              </ul>
+            </article>
+
+            <article class="diagnosis-card" id="shadingDiagnosis">
+              <header>
+                <i class="diag-dot shading"></i>
+                <strong>着色采样误差</strong>
+                <span id="shadingVerdict">检查中</span>
+              </header>
+              <p id="shadingDetail">运行扫描后判断角点、细笔画与通道接缝。</p>
+              <ul>
+                <li>随字号与亚像素位置变化</li>
+                <li>参考轮廓干净，仅覆盖分类偏移</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="error-legend">
+            <h3>叠加图例</h3>
+            <span><i class="legend-mark magenta"></i>轮廓错误 / 破口</span>
+            <span><i class="legend-mark cyan"></i>断笔 / 细笔画丢失</span>
+            <span><i class="legend-mark amber"></i>边界采样偏差</span>
+            <span><i class="legend-mark blue"></i>通道分组角点</span>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <span>LOCAL-FIRST · 字体文件不会离开浏览器</span>
+        <span>MSDF / WebGL2 / Screen derivatives</span>
+      </footer>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
